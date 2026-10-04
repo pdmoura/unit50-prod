@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <title>WC Parcel Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="stylesheet" href="includes/style.css">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    #delinquent_true_link>a {
+      background-color: #f2dede;
+      border-radius: 4px 4px 0 0;
+      color: #a94442;
+      font-weight: 500;
+      animation: colorChange 2s infinite;
+    }
+
+    @keyframes colorChange {
+      0% {
+        color: #EC6C6A;
+      }
+
+      100% {
+        color: #a94442;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <!-- <a class="navbar-brand" href="https://portal.co.weber.ut.us/devel/tax_dev/psearch/">
+        <img src="includes/images/WC_MOUNTAIN_LOGO-02.png" alt="" width="110px" height="42px" style="position:absolute; top:0; margin-top:3px;">
+      </a>
+      <a class="navbar-brand" href="https://portal.co.weber.ut.us/devel/tax_dev/psearch/">
+        <img src="includes/images/WC_TYPE-03.png" alt="" width="190px" height="30px" style="position:absolute; top:1; left:125px;">
+      </a> -->
+      <a class="navbar-brand" href="/parcelsearch">
+        Weber County Parcel Search
+      </a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="https://webercountyutah.gov/"></span> Weber County Home</a></li>
+        <li><a href="https://www.webercountyutah.gov/Treasurer/">Weber County Treasurer</a></li>
+        <li><a href="https://www.webercountyutah.gov/GIS/gizmo2/index.html"> Interactive Maps</a></li>
+      </ul>
+    </div>
+</nav>  <div class="container">
+    <!-- <div class="alert alert-danger">
+      <strong>Alert!</strong> Weber County Parcel Search is currently undergoing maintenance.
+    </div> -->
+    <ul class="breadcrumb">
+      <li><a href="https://webercountyutah.gov/parcelsearch/">Search</a></li>
+      <li><a href="results.php?type=&=">Results</a></li>
+      <li>Parcel #: <strong>009999999</strong></li>
+    </ul>
+    <div id="mobile-tabs">
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Current Taxes</a>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+              <li class="active">
+                <a>
+                  Current Taxes
+                </a>
+              </li>
+              <li>
+                <a href="ownership-info.php?id=009999999">
+                  Ownership Info
+                </a>
+              </li>
+              <li>
+                <a href="tax-history.php?id=009999999">
+                  Tax History
+                </a>
+              </li>
+              <li>
+                <a href="property-characteristics.php?id=009999999">
+                  Property Characteristics
+                </a>
+              </li>
+              <li id="">
+                <a href="delinquent.php?id=009999999">
+                  Delinquent Taxes
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div id="desktop-tabs">
+          <ul class="nav nav-tabs nav-justified">
+            <li class="active">
+              <a href="#">
+                Current Taxes
+              </a>
+            </li>
+            <li>
+              <a href="ownership-info.php?id=009999999">
+                Ownership Info
+              </a>
+            </li>
+            <li>
+              <a href="tax-history.php?id=009999999">
+                Tax History
+              </a>
+            </li>
+            <li>
+              <a href="property-characteristics.php?id=009999999">
+                Property Characteristics
+              </a>
+            </li>
+            <li id="">
+              <a href="delinquent.php?id=009999999">
+                Delinquent Taxes
+              </a>
+            </li>
+          </ul>
+          <br>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+                                    
+    <div class='alert alert-warning text-center'>
+      <strong>No tax history is available for this parcel.</strong>
+    </div>
+                        </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div>
+              <h3>Parcel #:<strong> 009999999</strong></h3>
+            </div>
+          </div>
+          <div class="col-md-2"></div>
+          <div class="col-md-2">
+            <a href="https://webercountyutah.gov/parcelsearch/print-current-taxes.php?id=009999999&year=" class="btn btn-default pull-right form-control" id="payment" target="_blank">Print This Page</a>
+          </div>
+          <div class="col-md-2 pay-button">
+                          <a class="btn btn-primary pull-right form-control" id="payment" href="https://www.webercountyutah.gov/payments/index.php?id=009999999"><b>Make a Payment</b></a>
+                      </div>
+        </div>
+        <hr>
+        <div class="panel panel-warning">
+          <div class="panel-heading"><strong>Please Be Aware</strong></div>
+          <div class="panel-body">
+            <ol>
+              <li><strong><u>Information Posting Timeline:</u></strong> Current year tax information will be posted on this screen as it becomes available. Ownership information will be posted in the Spring, property values will be posted in June and tax amounts due will be posted in mid-October. </li><br>
+              <li><strong><u>Prior-Year Data Is Frozen:</u></strong> If you use the 'View Prior Years' selection box below, the prior year information is frozen for illustration purposes to show the year end's status for the year you choose. This includes the 'balance' due amount. </li><br>
+              <li><strong><u>Delinquent Taxes:</u></strong> If current year taxes are not paid by November 30th, they are delinquent as of December 1st and will show as a balance due below. This delinquent balance will not be transferred to the 'Delinquent Taxes' screen (see pull-down menu item above) until February 1st of next year. Please click on the 'Delinquent Taxes' menu at the top of this page for all other up-to-date 'delinquent tax' information.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <strong>
+              Parcel Summary
+            </strong>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-6">
+                <form class="form-horizontal" method="get" action="current-taxes.php">
+                  <input hidden name="id" value="009999999">
+                  <div class="row">
+                    <label for="year" class="col-sm-3 control-label" style="text-align:left;">Year: </label>
+
+                  </div>
+                  <div class="row">
+                    <label for="year" class="col-sm-4 control-label" style="text-align:left;">
+                      View Prior Years:
+                    </label>
+                    <div class="col-md-4" style="text-align:left;">
+                      <select class="form-control" name="year" id="year" onchange="this.form.submit()" required>
+                        <option value="">Select Year</option>
+                                              </select>
+                    </div>
+
+                  </div>
+                </form>
+                <br>
+                <strong>Property Owner &amp; Address</strong> (1/1/)<br>
+                <br>
+                Please click on "Ownership Info Tab" above for address information<br>
+                <strong>Loan Company:</strong><br>
+                                <br>
+                                <br>
+                <strong>Tax Area</strong>
+                <br>
+                                <br>
+                <br>
+                <a href="https://weber.maps.arcgis.com/apps/instant/basic/index.html?appid=72f1293458bd48bf8048b65d384aa32d" class="btn btn-default">View the Assessed Value Map</a>
+                <br>
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-4">
+                    <strong>Market</strong><br>
+                                      </div>
+                  <div class="col-md-4">
+                    <strong>Taxable</strong><br>
+                     <strong>X</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                      <strong>Rate</strong><br>
+                                          </div>
+                  </div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Net Assessment Charge</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                                          </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Total Direct</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                                          </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Penalty Charge</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                                          </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Sub Total</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                                          </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4"></div>
+                  <div class="col-md-8">
+                    <hr>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                    <strong>Total Payments</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                                          </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+
+                  </div>
+                  <div class="col-md-4">
+                    <strong>
+                       Balance
+                    </strong>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="pull-right">
+                      <strong>$0.00</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <strong>Tax Detail</strong>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-6">
+                <strong>Direct Charges</strong>
+              </div>
+              <div class="col-md-6">
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col-md-3'>
+                <strong>Type</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Description</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Amount</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Status</strong>
+              </div>
+            </div>
+                        <hr>
+            <div class="row">
+              <div class="col-md-6">
+                <strong>Payments</strong>
+              </div>
+              <div class="col-md-6">
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col-md-3'>
+                <strong>Pay Date</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Payee</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Amount</strong>
+              </div>
+              <div class='col-md-3'>
+                <strong>Status</strong>
+              </div>
+            </div>
+                        <br>
+            <div class='row'>
+              <div class='col-md-3'></div>
+              <div class='col-md-6'>
+                                <br>
+                
+    <div class='alert alert-warning text-center'>
+      <strong>No tax history is available for this parcel.</strong>
+    </div>
+                </div>
+              <div class='col-md-3'></div>
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class="col-md-4"></div>
+          <div class='col-md-4'>
+            <div class="text-center"><br>
+              <strong>
+                <a href="https://www.webercountyutah.gov/payments/index.php?id=009999999">
+                  Make a Payment Online! <br>
+                </a>
+              </strong>
+              Any questions concerning tax payment information should be directed to:<br>
+              <a href="https://www.webercountyutah.gov/Treasurer/"><strong>Weber County
+                  Treasurer</strong></a><br>
+              801-399-8454<br>
+              2380 Washington Blvd Ste 350 &middot; Ogden, UT 84401
+            </div>
+            <br>
+          </div>
+          <div class="col-md-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel-footer footer navbar-sticky-bottom text-muted">
+        <p class="text-center">Copyright © <a href="https://www.webercountyutah.gov/">Weber County</a> - 2380
+          Washington
+          Blvd Ste 350 Ogden, UT 84401 - <a href="https://webercountyutah.gov/disclaimer.php">Disclaimer</a></p>
+      </div>
+    </div>
+  </div>
+</footer>    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-66804312-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-57E4QT1HRR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-57E4QT1HRR');
+</script></body>
+
+</html>

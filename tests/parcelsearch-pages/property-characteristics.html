@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>WC Parcel Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <link rel="stylesheet" href="includes/style.css">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+  <style type="text/css">
+    /* width */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: rgba(168, 168, 168, 0.85);
+      border-radius: 10px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(134, 134, 134, 0.85);
+    }
+
+    #delinquent_true_link>a {
+      background-color: #f2dede;
+      border-radius: 4px 4px 0 0;
+      color: #a94442;
+      font-weight: 500;
+      animation: colorChange 2s infinite;
+    }
+
+    /* handling the multiple tables */
+    .table-container {
+      display: none;
+    }
+
+    .visible {
+      display: block;
+    }
+
+    @keyframes colorChange {
+      0% {
+        color: #EC6C6A;
+      }
+
+      100% {
+        color: #a94442;
+      }
+    }
+
+    .page-button-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+  <script>
+    function printpage() {
+      window.print()
+    }
+  </script>
+
+</head>
+
+<body>
+  <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <!-- <a class="navbar-brand" href="https://portal.co.weber.ut.us/devel/tax_dev/psearch/">
+        <img src="includes/images/WC_MOUNTAIN_LOGO-02.png" alt="" width="110px" height="42px" style="position:absolute; top:0; margin-top:3px;">
+      </a>
+      <a class="navbar-brand" href="https://portal.co.weber.ut.us/devel/tax_dev/psearch/">
+        <img src="includes/images/WC_TYPE-03.png" alt="" width="190px" height="30px" style="position:absolute; top:1; left:125px;">
+      </a> -->
+      <a class="navbar-brand" href="/parcelsearch">
+        Weber County Parcel Search
+      </a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="https://webercountyutah.gov/"></span> Weber County Home</a></li>
+        <li><a href="https://www.webercountyutah.gov/Treasurer/">Weber County Treasurer</a></li>
+        <li><a href="https://www.webercountyutah.gov/GIS/gizmo2/index.html"> Interactive Maps</a></li>
+      </ul>
+    </div>
+</nav>
+  <div class="container">
+    <ul class="breadcrumb">
+      <li><a href="https://webercountyutah.gov/parcelsearch/">Search</a></li>
+      <li><a href="results.php?type=&page_number=1&=">Results</a></li>
+      <li>Parcel #: <strong>001234567</strong></li>
+    </ul>
+    <div id="desktop-tabs">
+      <ul class="nav nav-tabs nav-justified">
+        <li><a href="current-taxes.php?id=001234567">Current Taxes</a></li>
+        <li><a href="ownership-info.php?id=001234567">Ownership Info</a></li>
+        <li><a href="tax-history.php?id=001234567">Tax History</a></li>
+        <li class='active'><a href="">Property Characteristics</a></li>
+        <li id=""><a href="delinquent.php?id=001234567">Delinquent Taxes</a></li>
+      </ul>
+      <br>
+    </div>
+    <div id="mobile-tabs">
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Property Characteristics</a>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+              <li><a href="current-taxes.php?id=001234567">Current Taxes</a></li>
+              <li><a href="ownership-info.php?id=001234567">Ownership Info</a></li>
+              <li><a href="tax-history.php?id=001234567">Tax History</a></li>
+              <li class='active'><a href="">Property Characteristics</a></li>
+              <li id=""><a href="delinquent.php?id=001234567">Delinquent Taxes</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+                        
+    <div class='row'>
+      <div class='col-md-12'>
+        <div class='alert alert-info text-center'>
+          <strong>Past Delinquent Tax History</strong><br>
+          <a href='delinquent.php?id=001234567'>Click Here to View</a>
+          </div>
+      </div>
+    </div>
+        </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div>
+          <h3>Parcel #:<strong> 001234567</strong></h3>
+        </div>
+      </div>
+      <div class="col-md-2"></div>
+      <div class="col-md-2">
+        <a href="https://webercountyutah.gov/parcelsearch/print-property-characteristics.php?id=001234567" class="btn btn-default pull-right form-control" id="payment" target="_blank">Print This Page</a>
+      </div>
+      <div class="col-md-2 pay-button">
+                  <a class="btn btn-primary pull-right form-control" id="payment" href="https://www.webercountyutah.gov/payments/index.php?id=001234567"><b>Make a Payment</b></a>
+              </div>
+    </div>
+    <hr>
+    <!-- <div class="alert alert-danger" role="alert">
+      The Property Characteristics page is temporarily unavailable due to maintenance. We apologize for the inconvenience and are working to restore the service as quickly as possible. Thank you for your patience.
+    </div> -->
+    <div class="row">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <strong>
+            Property Characteristics
+          </strong>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-6" style="text-align:left;">
+
+              <div style="text-align:center;">
+                <h4><strong>Property Characteristics</strong></h4>
+              </div>
+              <table class='table table-condensed'>
+                
+        <tr>
+          <td><strong>Assessment Data Year:</strong></td>
+          <td>2026 (as of Lien Date January 1st)</td>
+        </tr>
+        <tr>
+          <td><strong>Lot Size:</strong></td>
+          <td>0.21 Acres</td>
+        </tr>
+        <tr>
+          <td><strong>FAA/Greenbelt:</strong></td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td><strong>Land Type:</strong></td>
+          <td>Unknown</td>
+        </tr>
+        <tr>
+          <td><strong>Neighborhood:</strong></td>
+          <td>324</td>
+        </tr>
+                    </table>
+
+              <div style="text-align:center;">
+                <h4><strong>Building Characteristics</strong></h4>
+              </div>
+
+              <!-- Per-building blocks with Next/Prev -->
+              
+          <div class='table-container visible' id='table1'>
+            <h5><strong>Building #1</strong></h5>
+            <table class='table table-condensed'>
+              <tr><td width='50%'><strong>Property Type:</strong></td><td width='50%'>RESIDENTIAL</td></tr>
+              <tr><td width='50%'><strong>Style:</strong></td><td width='50%'>Bi-Level</td></tr>
+              <tr><td width='50%'><strong>Exterior:</strong></td><td width='50%'>Frame:  Plywood Hardboard</td></tr>
+              <tr><td width='50%'><strong>Roof Cover:</strong></td><td width='50%'>Shingle</td></tr>
+              <tr><td width='50%'><strong>Quality:</strong></td><td width='50%'>Average Plus (3.5)</td></tr>
+              <tr><td width='50%'><strong>Year of Construction:</strong></td><td width='50%'>1976</td></tr>
+              <tr><td width='50%'><strong>Gross Living Area (Above-Grade):</strong></td><td width='50%'>1,487 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Percent Complete:</strong></td><td width='50%'>100%</td></tr>
+              <tr><td width='50%'><strong>Basement Square Feet:</strong></td><td width='50%'>675 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Basement Finish Percentage:</strong></td><td width='50%'>95%</td></tr>
+            </table>
+          </div>
+          <div class='table-container ' id='table2'>
+            <h5><strong>Building #2</strong></h5>
+            <table class='table table-condensed'>
+              <tr><td width='50%'><strong>Property Type:</strong></td><td width='50%'>DETACHED</td></tr>
+              <tr><td width='50%'><strong>Style:</strong></td><td width='50%'>Material Storage</td></tr>
+              <tr><td width='50%'><strong>Exterior:</strong></td><td width='50%'>N/A</td></tr>
+              <tr><td width='50%'><strong>Roof Cover:</strong></td><td width='50%'>N/A</td></tr>
+              <tr><td width='50%'><strong>Quality:</strong></td><td width='50%'>Average (3)</td></tr>
+              <tr><td width='50%'><strong>Year of Construction:</strong></td><td width='50%'>1981</td></tr>
+              <tr><td width='50%'><strong>Gross Living Area (Above-Grade):</strong></td><td width='50%'>32 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Percent Complete:</strong></td><td width='50%'>100%</td></tr>
+              <tr><td width='50%'><strong>Basement Square Feet:</strong></td><td width='50%'>0 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Basement Finish Percentage:</strong></td><td width='50%'>0%</td></tr>
+            </table>
+          </div>
+          <div class='table-container ' id='table3'>
+            <h5><strong>Building #3</strong></h5>
+            <table class='table table-condensed'>
+              <tr><td width='50%'><strong>Property Type:</strong></td><td width='50%'>DETACHED</td></tr>
+              <tr><td width='50%'><strong>Style:</strong></td><td width='50%'>Material Storage</td></tr>
+              <tr><td width='50%'><strong>Exterior:</strong></td><td width='50%'>N/A</td></tr>
+              <tr><td width='50%'><strong>Roof Cover:</strong></td><td width='50%'>N/A</td></tr>
+              <tr><td width='50%'><strong>Quality:</strong></td><td width='50%'>Average (3)</td></tr>
+              <tr><td width='50%'><strong>Year of Construction:</strong></td><td width='50%'>1980</td></tr>
+              <tr><td width='50%'><strong>Gross Living Area (Above-Grade):</strong></td><td width='50%'>120 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Percent Complete:</strong></td><td width='50%'>100%</td></tr>
+              <tr><td width='50%'><strong>Basement Square Feet:</strong></td><td width='50%'>0 ft<sup>2</sup></td></tr>
+              <tr><td width='50%'><strong>Basement Finish Percentage:</strong></td><td width='50%'>0%</td></tr>
+            </table>
+          </div>
+      <hr>
+      <div class='page-button-container'>
+        <button class='btn btn-primary' onclick='showPreviousTable()' id='previousButton'>Previous</button>
+        <b><span id='pageInfo'></span></b>
+        <button class='btn btn-primary' onclick='showNextTable()' id='nextButton'>Next</button>
+      </div>              <hr>
+
+            </div>
+            <div class="col-md-6" style="text-align:center;">
+              <h4><strong>Building Sketches</strong></h4>
+              
+      <div style='text-align:center; margin-bottom:15px;'>
+        <a href='https://webercamastorage.blob.core.windows.net/media/sketches/7b76468c-165b-4cf9-b2a3-29aab2630344.png' target='_blank'>
+          <img src='https://webercamastorage.blob.core.windows.net/media/sketches/7b76468c-165b-4cf9-b2a3-29aab2630344.png' width='75%' height='auto' alt='Sketch for improvement 180740' loading='lazy'>
+        </a><br>
+        <span class='text-muted'>IMP: 180740</span>
+      </div>              <hr>
+              <div class="row">
+                <div class="col">
+                  <a class="btn btn-default" href="https://gis-portal.webercountyutah.gov/arcgis/apps/experiencebuilder/experience/?id=6e5c608648b245d982c10031fc0c5d3b">View the Assessed Value map</a>
+
+                  <a class="btn btn-default" href="https://webercountyutah.gov/GIS/gizmo2/index.html?find=001234567" target="_new">View in Geo-Gizmo</a>
+                </div>
+              </div>
+              <hr>
+              <b>Plat Maps</b><br>07-172<a href=https://webercountyutah.gov/mounts/surveyorimages/Published%20Data/Platmaps/07-172.PDF target="_blank"><img src="includes/images/pdf_icon_sm.gif" border="0" align="absmiddle">View PDF</a><br>              Updated: June 01 2026                          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='row'>
+      <div class="col-md-4"></div>
+      <div class="col-md-4">
+        <div class="text-center"><br>
+          <strong>
+            <a href="https://www.webercountyutah.gov/payments/index.php?id=001234567">
+              Make a Payment Online! <br>
+            </a>
+          </strong>
+          Any questions concerning tax payment information should be directed to:<br>
+          <a href="https://www.webercountyutah.gov/Treasurer/"><strong>Weber County
+              Treasurer</strong></a><br>
+          801-399-8454<br>
+          2380 Washington Blvd Ste 350 &middot; Ogden, UT 84401
+        </div>
+        <br>
+      </div>
+      <div class="col-md-4"></div>
+    </div>
+  </div>
+  <footer class="navbar-sticky-bottom">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="panel-footer footer text-muted">
+          <p class="text-center">Copyright © <a href="https://webercountyutah.gov/">Weber County</a> - 2380
+            Washington
+            Blvd Ste 350 Ogden, UT 84401 - <a href="https://webercountyutah.gov/disclaimer.php">Disclaimer</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Next/Prev logic for building tables
+    let currentTable = 1;
+    const totalTables = document.querySelectorAll('.table-container').length;
+
+    function showTable(tableId) {
+      document.querySelectorAll('.table-container').forEach(table => {
+        table.classList.remove('visible');
+      });
+      const el = document.getElementById(tableId);
+      if (el) el.classList.add('visible');
+      updatePageInfo();
+      updateButtonState();
+    }
+
+    function showPreviousTable() {
+      if (currentTable > 1) {
+        currentTable--;
+        showTable(`table${currentTable}`);
+      }
+    }
+
+    function showNextTable() {
+      if (currentTable < totalTables) {
+        currentTable++;
+        showTable(`table${currentTable}`);
+      }
+    }
+
+    function updatePageInfo() {
+      const info = document.getElementById('pageInfo');
+      if (info) info.innerText = (totalTables > 0) ? `${currentTable} of ${totalTables}` : '0 of 0';
+    }
+
+    function updateButtonState() {
+      const prevBtn = document.getElementById('previousButton');
+      const nextBtn = document.getElementById('nextButton');
+      if (prevBtn) prevBtn.disabled = (currentTable === 1);
+      if (nextBtn) nextBtn.disabled = (currentTable === totalTables || totalTables === 0);
+    }
+
+    // initialize on load
+    if (totalTables > 0) {
+      showTable('table1');
+    } else {
+      updatePageInfo();
+      updateButtonState();
+    }
+  </script>
+
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-66804312-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-57E4QT1HRR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-57E4QT1HRR');
+</script></body>
+
+</html>
