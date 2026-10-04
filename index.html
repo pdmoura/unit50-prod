@@ -1,2 +1,70 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#163c32"/><meta name="description" content="Unit 50 — local residential prospecting in Weber County."/><title>Unit 50 · Fieldwork</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"/></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#16372d" />
+    <meta
+      name="description"
+      content="Unit 50 — local residential prospecting in Weber County."
+    />
+    <title>Unit 50 · Fieldwork</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- The loading screen is styled here so it shows before the app's files arrive. -->
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-items: center;
+        background: #16372d;
+        perspective: 700px;
+        transition:
+          opacity 0.45s ease,
+          visibility 0.45s;
+      }
+      #splash.done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #splash svg {
+        width: 68px;
+        height: auto;
+        color: #f2f6e8;
+        animation: splash-spin 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+      @keyframes splash-spin {
+        to {
+          transform: rotateY(360deg);
+        }
+      }
+      @keyframes splash-pulse {
+        from {
+          opacity: 0.45;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash svg {
+          animation: splash-pulse 1.4s ease-in-out infinite alternate;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Spinning logo shown until the app knows what to display (src/splash.ts hides it). -->
+    <div id="splash" role="status" aria-label="Loading Unit 50">
+      <svg viewBox="170 109 915 1072" fill="currentColor" aria-hidden="true">
+        <path
+          d="M170.225 336.937C176.698 340.855 187.624 346.211 194.528 349.869L235.26 371.686C286.23 398.445 336.974 425.634 387.486 453.248L387.523 866.322C396.752 872.075 408.927 878.373 418.577 883.707C436.244 893.588 453.973 903.358 471.763 913.016L582.958 974.343C582.531 959.956 582.938 944.558 582.899 930.079L582.816 835.036C582.87 771.115 582.211 706.439 582.879 642.595C641.18 614.867 698.902 584.94 757.162 557.069C771.511 550.205 785.817 542.608 800.236 536.081L799.846 747.471L799.901 934.968C799.896 980.47 799.182 1027.23 800.349 1072.66C786.156 1079.22 769.144 1088.79 755.218 1096.29C734.501 1107.26 713.846 1118.34 693.254 1129.55C662.206 1146.39 627.927 1163.37 597.651 1180.74C592.476 1176.97 584.121 1172.82 578.304 1169.53L547.632 1151.95L441.123 1090.79L265.692 990.401C246.288 979.198 226.827 968.092 207.311 957.084C195.086 950.085 182.145 942.32 169.793 935.829L169.799 555.544L169.832 412.439C169.852 390.015 168.921 358.674 170.225 336.937Z M1083.36 390.633L1083.72 390.666C1083.93 390.951 1084.13 391.236 1084.34 391.521C1084.55 413.292 1084.39 470.874 1084.36 489.472L1084.24 776.555C1083.85 827.727 1083.84 878.901 1084.21 930.073C1057.38 945.548 1029.43 960.472 1002.29 975.471L840.505 1064.68L840.073 1064.35C838.885 1061.58 839.505 952.328 839.474 939.329L838.715 518.717C844.887 514.763 858.668 508.009 865.698 504.389L910.645 480.942L1083.36 390.633Z M624.356 108.939C627.811 109.755 648.563 120.968 652.954 123.281L715.731 156.131L958.908 282.097L1031.48 320.243C1049.35 329.398 1067.07 338.842 1084.63 348.574L917.889 436.577L855.072 469.33C847.126 473.432 836.419 480.085 828.357 483.173C789.654 461.704 745.877 439.78 706.344 419.292L497.523 310.154C455.028 288.132 409.833 265.74 368.035 242.739C378.904 236.308 390.743 230.615 401.976 224.734L463.724 192.497L624.356 108.939Z"
+        />
+      </svg>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

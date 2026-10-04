@@ -4,6 +4,7 @@ import { LogIn } from "lucide-react";
 import { LogoFull } from "./Logo";
 import { initAuth, signOut } from "./auth";
 import { api } from "./api";
+import { hideSplash } from "./splash";
 
 // Who is signed in, for the app shell. email is null when sign-in is off.
 const Account = createContext<{
@@ -73,12 +74,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       window.removeEventListener("unit50:signed-out", onRejected);
     };
   }, []);
-  if (state.step === "loading")
-    return (
-      <div className="auth-screen" role="status">
-        <p className="auth-wait">Loading…</p>
-      </div>
-    );
+  useEffect(() => {
+    if (state.step !== "loading") hideSplash();
+  }, [state.step]);
+  // The spinning logo from index.html is still on top at this point.
+  if (state.step === "loading") return <div className="auth-screen" />;
   if (state.step === "failed")
     return (
       <div className="auth-screen">

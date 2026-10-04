@@ -2315,9 +2315,25 @@ td .text-link {
   height: auto;
   color: #f2f6e8;
 }
-.auth-wait {
-  color: #c4d3c8;
-  font-size: 12px;
+/* The sign-in screen settles into place as the loading logo fades out. */
+.auth-logo,
+.auth-card {
+  animation: auth-arrive 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.auth-card {
+  animation-delay: 0.08s;
+}
+@keyframes auth-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-logo,
+  .auth-card {
+    animation: none;
+  }
 }
 .auth-card {
   width: 100%;
