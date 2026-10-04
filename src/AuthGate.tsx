@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useId, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { LogIn } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 import { LogoFull } from "./Logo";
 import { initAuth, signOut } from "./auth";
 import { api } from "./api";
@@ -114,8 +114,10 @@ function SignIn({
 }) {
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
+    [shown, setShown] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(message || "");
+  const passwordId = useId();
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -156,16 +158,29 @@ function SignIn({
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <label>
-          Password
+        <label htmlFor={passwordId}>Password</label>
+        <div className="password-field">
           <input
-            type="password"
+            id={passwordId}
+            type={shown ? "text" : "password"}
             autoComplete="current-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </label>
+          <button
+            type="button"
+            aria-label={shown ? "Hide password" : "Show password"}
+            aria-pressed={shown}
+            title={shown ? "Hide password" : "Show password"}
+            onClick={() => setShown((s) => !s)}
+          >
+            {shown ? <EyeOff size={19} /> : <Eye size={19} />}
+          </button>
+        </div>
         <button className="primary-button full" disabled={busy}>
           <LogIn size={17} />
           {busy ? "Signing in…" : "Sign in"}

@@ -2393,6 +2393,40 @@ td .text-link {
   /* 16px keeps phones from zooming the page when the field is focused. */
   font-size: 16px;
 }
+/* The password box with its show/hide eye at the right edge. */
+.auth-card label[for] {
+  margin-bottom: 0;
+}
+.password-field {
+  position: relative;
+  margin: 7px 0 14px;
+}
+.password-field input {
+  margin-top: 0;
+  padding-right: 50px;
+}
+/* Edge adds its own eye; ours is the one that shows in every browser. */
+.password-field input::-ms-reveal {
+  display: none;
+}
+.password-field button {
+  position: absolute;
+  inset: 3px 3px 3px auto;
+  width: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #6f7a6c;
+}
+.password-field button:hover {
+  color: var(--dark);
+}
+.password-field button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
 .auth-card .primary-button {
   margin-top: 6px;
   padding: 14px 15px;
