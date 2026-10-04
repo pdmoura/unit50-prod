@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { House, LogIn } from "lucide-react";
-import { initAuth, signOutHere } from "./auth";
+import { initAuth, signOut } from "./auth";
 import { api } from "./api";
 
 // Who is signed in, for the app shell. email is null when sign-in is off.
@@ -30,7 +30,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         const me = await api<{ email: string }>("/me");
         if (live) setState({ step: "signed-in", email: me.email });
       } catch (e) {
-        await signOutHere();
+        await signOut();
         // A new attempt number remounts the form, so it shows this message.
         if (live)
           setState({
@@ -64,7 +64,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         if (live) setState({ step: "failed", message: (e as Error).message });
       });
     // A rejected request (expired or disabled account) returns to the sign-in screen.
-    const onRejected = () => void signOutHere();
+    const onRejected = () => void signOut();
     window.addEventListener("unit50:signed-out", onRejected);
     return () => {
       live = false;
@@ -97,7 +97,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     <Account.Provider
       value={{
         email: state.step === "signed-in" ? state.email : null,
-        signOut: client ? () => void client.auth.signOut() : null,
+        signOut: client ? () => void signOut() : null,
       }}
     >
       {children}

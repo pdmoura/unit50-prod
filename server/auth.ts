@@ -47,14 +47,21 @@ export function supabaseVerifier(
   };
 }
 // Remembers recent answers so one page load does not ask Supabase a dozen times.
-export function cached(verify: TokenVerifier, ttlMs = 60000): TokenVerifier {
+// forget() drops one token at once; signing out uses it so the token stops
+// working immediately and not when its remembered answer expires.
+export function cached(verify: TokenVerifier, ttlMs = 60000) {
   const seen = new Map<string, { user: AuthUser | null; expires: number }>();
-  return async (token) => {
-    const hit = seen.get(token);
-    if (hit && hit.expires > Date.now()) return hit.user;
-    const user = await verify(token);
-    if (seen.size >= 1000) seen.clear();
-    seen.set(token, { user, expires: Date.now() + ttlMs });
-    return user;
+  return {
+    async verify(token: string) {
+      const hit = seen.get(token);
+      if (hit && hit.expires > Date.now()) return hit.user;
+      const user = await verify(token);
+      if (seen.size >= 1000) seen.clear();
+      seen.set(token, { user, expires: Date.now() + ttlMs });
+      return user;
+    },
+    forget(token: string) {
+      seen.delete(token);
+    },
   };
 }

@@ -68,11 +68,14 @@ test("Supabase check accepts only confirmed accounts and reports outages", async
     lookups++;
     return token === "ok" ? { id: "u1", email: "rep@unit50.com" } : null;
   });
-  assert.equal((await once("ok"))?.email, "rep@unit50.com");
-  assert.equal((await once("ok"))?.email, "rep@unit50.com");
-  assert.equal(await once("bad"), null);
-  assert.equal(await once("bad"), null);
+  assert.equal((await once.verify("ok"))?.email, "rep@unit50.com");
+  assert.equal((await once.verify("ok"))?.email, "rep@unit50.com");
+  assert.equal(await once.verify("bad"), null);
+  assert.equal(await once.verify("bad"), null);
   assert.equal(lookups, 2);
+  once.forget("ok");
+  assert.equal((await once.verify("ok"))?.email, "rep@unit50.com");
+  assert.equal(lookups, 3);
 });
 test("API needs a signed-in user who is enabled in app_users", async () => {
   const schema = await createSchema();
@@ -80,7 +83,10 @@ test("API needs a signed-in user who is enabled in app_users", async () => {
     "rep-token": { id: "u1", email: "rep@unit50.com" },
     "stranger-token": { id: "u2", email: "stranger@example.com" },
   };
-  const verify: TokenVerifier = async (token) => people[token] ?? null;
+  // Supabase stops recognising a token once its session is signed out.
+  const signedOut = new Set<string>();
+  const verify: TokenVerifier = async (token) =>
+    signedOut.has(token) ? null : (people[token] ?? null);
   const app = await createApp({
     databaseUrl: TEST_DATABASE_URL,
     schema,
@@ -147,11 +153,26 @@ test("API needs a signed-in user who is enabled in app_users", async () => {
       401,
     );
 
+    // Signing out: the server forgets the token at once, so it is refused on the
+    // very next request and not when the remembered answer would have expired.
+    people["phone-token"] = people["rep-token"];
+    assert.equal((await get("/api/summary", "phone-token")).statusCode, 200);
+    assert.equal(
+      (await get("/api/logout", "rep-token", "POST")).statusCode,
+      200,
+    );
+    signedOut.add("rep-token");
+    assert.equal((await get("/api/summary", "rep-token")).statusCode, 401);
+    assert.equal((await get("/api/me", "rep-token")).statusCode, 401);
+    // The same person's other device keeps working.
+    assert.equal((await get("/api/summary", "phone-token")).statusCode, 200);
+    assert.equal((await get("/api/logout", undefined, "POST")).statusCode, 401);
+
     // Removing the row locks the person out on their next request.
     const admin = openDb(TEST_DATABASE_URL, schema);
     await admin`DELETE FROM app_users WHERE email='rep@unit50.com'`;
     await admin.end();
-    assert.equal((await get("/api/summary", "rep-token")).statusCode, 403);
+    assert.equal((await get("/api/summary", "phone-token")).statusCode, 403);
   } finally {
     await app.close();
     await dropSchema(schema);

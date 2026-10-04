@@ -160,8 +160,7 @@ select {
   flex-direction: column;
   gap: 8px;
 }
-.sidebar nav a,
-.sidebar nav button {
+.sidebar nav a {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -172,8 +171,7 @@ select {
   color: #c4d3c8;
   transition: background 0.15s;
 }
-.sidebar nav a:hover,
-.sidebar nav button:hover {
+.sidebar nav a:hover {
   background: #ffffff0a;
 }
 .sidebar nav a.active {
@@ -1607,8 +1605,7 @@ td .text-link {
     width: calc(100% - 190px);
     padding: 0 20px 20px;
   }
-  .sidebar nav a,
-  .sidebar nav button {
+  .sidebar nav a {
     font-size: 11px;
     gap: 8px;
   }
@@ -1677,15 +1674,13 @@ td .text-link {
   .sidebar nav {
     margin-top: 35px;
   }
-  .sidebar nav a,
-  .sidebar nav button {
+  .sidebar nav a {
     font-size: 0;
     justify-content: center;
     gap: 0;
     padding: 14px 7px;
   }
-  .sidebar nav a > svg:first-child,
-  .sidebar nav button > svg:first-child {
+  .sidebar nav a > svg:first-child {
     width: 21px;
     height: 21px;
   }
@@ -2288,11 +2283,27 @@ td .text-link {
     animation: none;
   }
 }
-.sidebar nav button {
-  width: 100%;
-  border: 0;
-  background: none;
-  text-align: left;
+.topbar .account {
+  gap: 10px;
+  min-width: 0;
+}
+.topbar .account > span {
+  color: #6f7a6c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar .account .secondary-button {
+  padding: 8px 11px;
+  font-size: 11px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+@media (max-width: 650px) {
+  /* The email is in the way on a phone; the button alone says enough. */
+  .topbar .account > span {
+    display: none;
+  }
 }
 .sidebar-bottom div {
   min-width: 0;

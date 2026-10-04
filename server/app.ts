@@ -116,7 +116,8 @@ export async function createApp(
     options.cloudinary === undefined ? cloudinaryConfig() : options.cloudinary;
   const auth: (AuthConfig & { verify?: TokenVerifier }) | null =
     options.auth === undefined ? authConfig() : options.auth;
-  const verify = auth && cached(auth.verify || supabaseVerifier(auth));
+  const tokens = auth && cached(auth.verify || supabaseVerifier(auth));
+  const bearer = (header?: string) => /^Bearer (.+)$/.exec(header || "")?.[1];
   const signedIn = new WeakMap<object, AuthUser>();
   // Any run from a prior process is gone. Never activate its partial staging rows.
   await sql.begin(async (tx) => {
@@ -144,7 +145,7 @@ export async function createApp(
     reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
     const path = req.url.split("?")[0];
     if (path.startsWith("/api/")) reply.header("Cache-Control", "no-store");
-    if (!verify) {
+    if (!tokens) {
       // Without sign-in the server is a single-user tool for this computer only.
       const host = req.headers.host || "";
       if (!/^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(host))
@@ -161,8 +162,8 @@ export async function createApp(
     }
     // The page itself is public; every API call needs a signed-in, enabled user.
     if (!path.startsWith("/api/") || openPaths.has(path)) return;
-    const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1];
-    const user = token ? await verify(token) : null;
+    const token = bearer(req.headers.authorization);
+    const user = token ? await tokens.verify(token) : null;
     if (!user) return reply.code(401).send({ error: "Sign in to continue." });
     const [enabled] =
       await sql`SELECT 1 FROM app_users WHERE email=${user.email}`;
@@ -191,6 +192,13 @@ export async function createApp(
   app.get("/api/me", async (req) => ({
     email: signedIn.get(req)?.email ?? null,
   }));
+  // Called just before the browser ends its Supabase session, so the token is
+  // refused from the very next request.
+  app.post("/api/logout", async (req) => {
+    const token = bearer(req.headers.authorization);
+    if (token) tokens?.forget(token);
+    return { ok: true };
+  });
   app.get("/api/summary", async (): Promise<Summary> => {
     const [[row], [visited], [due], cities, latest] = await Promise.all([
       sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE (${prioritySql(sql)})='High')::int AS high, COUNT(*) FILTER (WHERE p.lng IS NOT NULL)::int AS mapped FROM properties p WHERE p.active`,

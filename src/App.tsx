@@ -217,12 +217,6 @@ export default function App() {
             <Database size={20} />
             Data & imports
           </a>
-          {account.signOut && (
-            <button onClick={account.signOut}>
-              <LogOut size={20} />
-              Sign out
-            </button>
-          )}
         </nav>
         <div className="territory-card">
           <span className="eyebrow">YOUR TERRITORY</span>
@@ -270,7 +264,15 @@ export default function App() {
                   : "Follow-ups"}
             </span>
           </div>
-          {!account.email && (
+          {account.signOut ? (
+            <div className="account">
+              <span title={account.email || undefined}>{account.email}</span>
+              <button className="secondary-button" onClick={account.signOut}>
+                <LogOut size={15} />
+                Sign out
+              </button>
+            </div>
+          ) : (
             <span className="local-pill">
               <i className="live-dot" />
               LOCAL MVP
