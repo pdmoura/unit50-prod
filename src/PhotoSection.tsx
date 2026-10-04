@@ -4,6 +4,7 @@ import type { PropertyDetail, UploadTicket } from "../shared/types";
 import { post, del } from "./api";
 import PhotoViewer from "./PhotoViewer";
 import ConfirmDialog from "./ConfirmDialog";
+import { LogoSpinner } from "./Logo";
 
 const MAX_BYTES = 15 * 1024 * 1024;
 // Cloudinary resizes on the fly: a small square for the grid.
@@ -134,11 +135,11 @@ export default function PhotoSection({
             }}
           />
           <button
-            className="secondary-button full"
+            className={`secondary-button full ${busy ? "is-busy" : ""}`}
             disabled={Boolean(busy)}
             onClick={() => input.current?.click()}
           >
-            <Camera size={16} />
+            {busy ? <LogoSpinner /> : <Camera size={16} />}
             {busy || "Add photo"}
           </button>
         </>

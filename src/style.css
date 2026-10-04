@@ -2414,6 +2414,7 @@ td .text-link {
   font-weight: 550;
   line-height: 1.2;
   white-space: nowrap;
+  gap: 8px;
   background: #a8432f;
   border: 1px solid #a8432f;
   color: #fff;
@@ -2535,14 +2536,16 @@ td .text-link {
   /* 16px keeps phones from zooming the page when the field is focused. */
   font-size: 16px;
 }
-/* While signing in, the button keeps its color and the logo turns inside it,
-   the same way it does on the loading screen. */
-.auth-card .primary-button.is-busy {
+/* While a button's action is under way (signing in, uploading or removing a
+   photo), it keeps its color and the logo turns inside it, the same way it
+   does on the loading screen. */
+button.is-busy:disabled {
   opacity: 0.9;
   cursor: progress;
 }
 .button-spin {
   display: grid;
+  flex-shrink: 0;
   width: 17px;
   animation: logo-spin 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }

@@ -29,3 +29,11 @@ export function LogoMark({ className, title = "Unit 50" }: Props) {
     </svg>
   );
 }
+// The cube turning in place of a button's icon while its action is under way.
+export function LogoSpinner() {
+  return (
+    <span className="button-spin" aria-hidden="true">
+      <LogoMark />
+    </span>
+  );
+}

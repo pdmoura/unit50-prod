@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { LogoSpinner } from "./Logo";
 
 // In-app confirmation before an action that is hard to take back. On phones it
 // sits at the bottom of the screen, within thumb reach; on wider screens it is
@@ -66,10 +67,11 @@ export default function ConfirmDialog({
             Cancel
           </button>
           <button
-            className={tone === "danger" ? "danger-button" : "primary-button"}
+            className={`${tone === "danger" ? "danger-button" : "primary-button"} ${busy ? "is-busy" : ""}`}
             disabled={busy}
             onClick={onConfirm}
           >
+            {busy && <LogoSpinner />}
             {busy ? busyLabel : confirmLabel}
           </button>
         </div>
