@@ -32,6 +32,10 @@ export default function MapView({
   const refresh = useRef(() => {});
   useEffect(() => {
     if (!el.current) return;
+    // On large screens the interface is enlarged through the root font size
+    // (index.html); the dots drawn on the map are enlarged to match.
+    const scale =
+      parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
     let m: maplibregl.Map;
     try {
       m = new maplibregl.Map({
@@ -154,7 +158,7 @@ export default function MapView({
         id: "selected-line",
         type: "line",
         source: "selected",
-        paint: { "line-color": "#264f39", "line-width": 3 },
+        paint: { "line-color": "#264f39", "line-width": 3 * scale },
       });
       m.addLayer({
         id: "clusters",
@@ -167,13 +171,13 @@ export default function MapView({
           "circle-radius": [
             "step",
             ["get", "point_count"],
-            19,
+            19 * scale,
             100,
-            24,
+            24 * scale,
             1000,
-            29,
+            29 * scale,
           ],
-          "circle-stroke-width": 5,
+          "circle-stroke-width": 5 * scale,
           "circle-stroke-color": "rgba(255,255,255,.8)",
         },
       });
@@ -200,11 +204,11 @@ export default function MapView({
             ["linear"],
             ["zoom"],
             10,
-            ["match", ["get", "priority"], "High", 5, 4],
+            ["match", ["get", "priority"], "High", 5 * scale, 4 * scale],
             16,
-            ["match", ["get", "priority"], "High", 8.5, 7],
+            ["match", ["get", "priority"], "High", 8.5 * scale, 7 * scale],
           ],
-          "circle-stroke-width": 2,
+          "circle-stroke-width": 2 * scale,
           "circle-stroke-color": [
             "match",
             ["get", "priority"],

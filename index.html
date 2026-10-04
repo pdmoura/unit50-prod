@@ -12,6 +12,12 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- The loading screen is styled here so it shows before the app's files arrive. -->
     <style>
+      /* Large screens: from about 1760px wide the whole interface grows with
+         the screen (every size in the stylesheets is in rem, see
+         vite.config.ts). The height limit keeps wide, short screens usable. */
+      html {
+        font-size: clamp(16px, min(100vw / 110, 100vh / 56), 40px);
+      }
       #splash {
         position: fixed;
         inset: 0;

@@ -104,6 +104,94 @@ p {
 select {
   cursor: pointer;
 }
+/* Icons take their size from a number in the code (size={20}), which the
+   browser reads as fixed pixels. Restating each size here lets icons grow with
+   the rest of the interface on large screens. :where() keeps these rules weaker
+   than any other rule that sizes an icon. */
+:where(svg.lucide[width="12"]) {
+  width: 12px;
+  height: 12px;
+}
+:where(svg.lucide[width="13"]) {
+  width: 13px;
+  height: 13px;
+}
+:where(svg.lucide[width="14"]) {
+  width: 14px;
+  height: 14px;
+}
+:where(svg.lucide[width="15"]) {
+  width: 15px;
+  height: 15px;
+}
+:where(svg.lucide[width="16"]) {
+  width: 16px;
+  height: 16px;
+}
+:where(svg.lucide[width="17"]) {
+  width: 17px;
+  height: 17px;
+}
+:where(svg.lucide[width="18"]) {
+  width: 18px;
+  height: 18px;
+}
+:where(svg.lucide[width="19"]) {
+  width: 19px;
+  height: 19px;
+}
+:where(svg.lucide[width="20"]) {
+  width: 20px;
+  height: 20px;
+}
+:where(svg.lucide[width="21"]) {
+  width: 21px;
+  height: 21px;
+}
+:where(svg.lucide[width="22"]) {
+  width: 22px;
+  height: 22px;
+}
+:where(svg.lucide[width="24"]) {
+  width: 24px;
+  height: 24px;
+}
+:where(svg.lucide[width="26"]) {
+  width: 26px;
+  height: 26px;
+}
+:where(svg.lucide[width="27"]) {
+  width: 27px;
+  height: 27px;
+}
+:where(svg.lucide[width="28"]) {
+  width: 28px;
+  height: 28px;
+}
+:where(svg.lucide[width="29"]) {
+  width: 29px;
+  height: 29px;
+}
+:where(svg.lucide[width="30"]) {
+  width: 30px;
+  height: 30px;
+}
+:where(svg.lucide[width="32"]) {
+  width: 32px;
+  height: 32px;
+}
+:where(svg.lucide[width="36"]) {
+  width: 36px;
+  height: 36px;
+}
+:where(svg.lucide[width="38"]) {
+  width: 38px;
+  height: 38px;
+}
+:where(svg.lucide[width="40"]) {
+  width: 40px;
+  height: 40px;
+}
 .app-shell {
   display: flex;
   min-height: 100vh;
@@ -887,6 +975,14 @@ button.sidebar-bottom:focus-visible {
   align-items: center;
   gap: 8px;
   color: #7b652b;
+}
+/* The map's own button icons are fixed-size pictures (29px, and 24px for the
+   credits button); stating the size here lets them grow on large screens. */
+.maplibregl-ctrl button .maplibregl-ctrl-icon {
+  background-size: 29px 29px;
+}
+.maplibregl-ctrl-attrib-button {
+  background-size: 24px 24px;
 }
 .maplibregl-ctrl-attrib {
   font-size: 9px !important;
