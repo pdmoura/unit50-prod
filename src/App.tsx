@@ -20,6 +20,7 @@ import {
   X,
   PanelLeftClose,
   LogOut,
+  ChevronsUpDown,
 } from "lucide-react";
 import type {
   Filters,
@@ -73,8 +74,27 @@ export default function App() {
     [loading, setLoading] = useState(false),
     // Sign-out is confirmed first: "asking" shows the dialog, "leaving" waits.
     [leaving, setLeaving] = useState<"asking" | "leaving" | null>(null),
+    [accountMenu, setAccountMenu] = useState(false),
     [selected, setSelected] = useState<PropertyDetail | null>(null),
     [detailLoading, setDetailLoading] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  // The account menu closes on a click or tap anywhere else, and on Escape.
+  useEffect(() => {
+    if (!accountMenu) return;
+    const outside = (e: PointerEvent) => {
+      if (!accountRef.current?.contains(e.target as Node))
+        setAccountMenu(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountMenu(false);
+    };
+    window.addEventListener("pointerdown", outside);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", outside);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [accountMenu]);
   const detailRequest = useRef(0),
     selectedId = useRef<string | null>(null);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
@@ -237,18 +257,52 @@ export default function App() {
             Single-family residential
           </div>
         </div>
-        <div className="sidebar-bottom">
-          <span className="workspace-avatar">
-            {(account.email || "U")[0].toUpperCase()}
-          </span>
-          <div>
-            <strong>{account.email ? "Signed in" : "Local workspace"}</strong>
-            <span title={account.email || undefined}>
-              {account.email || "Saved on this computer"}
-            </span>
+        {account.signOut ? (
+          <div className="sidebar-account" ref={accountRef}>
+            {accountMenu && (
+              <div className="account-menu" role="menu">
+                <button
+                  role="menuitem"
+                  autoFocus
+                  onClick={() => {
+                    setAccountMenu(false);
+                    setLeaving("asking");
+                  }}
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+            <button
+              className="sidebar-bottom"
+              aria-haspopup="menu"
+              aria-expanded={accountMenu}
+              title={account.email || undefined}
+              onClick={() => setAccountMenu((open) => !open)}
+            >
+              <span className="workspace-avatar">
+                {(account.email || "U")[0].toUpperCase()}
+              </span>
+              <span className="who">
+                <strong>Signed in</strong>
+                <span>{account.email}</span>
+              </span>
+              <ChevronsUpDown size={15} className="account-chevron" />
+            </button>
           </div>
-          <span className="connection-dot" />
-        </div>
+        ) : (
+          <div className="sidebar-account">
+            <div className="sidebar-bottom">
+              <span className="workspace-avatar">U</span>
+              <span className="who">
+                <strong>Local workspace</strong>
+                <span>Saved on this computer</span>
+              </span>
+              <span className="connection-dot" />
+            </div>
+          </div>
+        )}
         {account.signOut && (
           <button
             className="sidebar-signout"

@@ -239,17 +239,79 @@ select {
   background: #96b675;
   display: inline-block;
 }
-.sidebar-bottom {
+/* Who is signed in, at the foot of the wide sidebar. When sign-in is on it is a
+   button that opens a small menu with Sign out. */
+.sidebar-account {
+  position: relative;
   margin-top: auto;
-  padding: 24px 5px 0;
+  padding-top: 24px;
+}
+.sidebar-bottom {
+  width: 100%;
+  padding: 8px 5px;
   display: flex;
   align-items: center;
   gap: 9px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  text-align: left;
 }
-/* Sign-out for the narrow sidebar, where the top bar scrolls out of reach. */
+button.sidebar-bottom:hover,
+button.sidebar-bottom[aria-expanded="true"] {
+  background: #ffffff0f;
+}
+button.sidebar-bottom:focus-visible {
+  outline: 2px solid #d9e9b9;
+  outline-offset: -2px;
+}
+.account-chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: #8fa697;
+}
+.account-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% - 18px);
+  padding: 5px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 40px #06140f73;
+  animation: menu-arrive 0.16s ease-out;
+}
+.account-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #2a3d31;
+  font-size: 13px;
+  font-weight: 500;
+}
+.account-menu button:hover,
+.account-menu button:focus-visible {
+  background: #eef2e6;
+  outline: none;
+}
+@keyframes menu-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+/* Sign-out for the narrow sidebar. It sits right under the page icons, not in
+   the bottom corner: phone browsers cover that corner with their own controls. */
 .sidebar-signout {
   display: none;
-  margin-top: auto;
+  position: relative;
+  margin-top: 15px;
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -259,6 +321,15 @@ select {
   background: none;
   color: #c4d3c8;
   transition: background 0.15s;
+}
+.sidebar-signout::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 24%;
+  right: 24%;
+  height: 1px;
+  background: #ffffff2e;
 }
 .sidebar-signout:hover {
   background: #ffffff0a;
@@ -282,7 +353,7 @@ select {
   font-size: 10px;
   font-weight: 500;
 }
-.sidebar-bottom div > span {
+.sidebar-bottom .who > span {
   font-size: 9px;
   color: #8fa697;
 }
@@ -1677,14 +1748,11 @@ td .text-link {
   .brand-full,
   .sidebar-section,
   .territory-card,
-  .sidebar-bottom {
+  .sidebar-account {
     display: none;
   }
   .brand-mark {
     display: block;
-  }
-  .sidebar {
-    padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
   .sidebar-signout {
     display: flex;
@@ -1766,7 +1834,7 @@ td .text-link {
 @media (max-width: 650px) {
   .sidebar {
     width: 56px;
-    padding: 19px 5px max(19px, env(safe-area-inset-bottom));
+    padding: 19px 5px;
   }
   .brand-mark {
     height: 32px;
@@ -2312,16 +2380,18 @@ td .text-link {
   gap: 6px;
   flex-shrink: 0;
 }
-@media (max-width: 900px) {
-  /* With the narrow sidebar, sign-out lives at its foot and stays in view. */
+/* The top-bar sign-out is for a mouse on the wide layout only. Touch screens
+   use the account button at the foot of the sidebar, and the narrow sidebar
+   has its own sign-out icon. */
+@media (max-width: 900px), (hover: none), (pointer: coarse) {
   .topbar .account {
     display: none;
   }
 }
-.sidebar-bottom div {
+.sidebar-bottom .who {
   min-width: 0;
 }
-.sidebar-bottom div > span {
+.sidebar-bottom .who > span {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
