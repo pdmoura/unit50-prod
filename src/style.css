@@ -122,32 +122,21 @@ select {
 }
 .brand {
   display: flex;
-  gap: 11px;
   align-items: center;
   padding: 0 12px;
-  font-size: 25px;
-  letter-spacing: 1px;
   color: #f2f6e8;
-  font-weight: 500;
 }
-.brand b {
-  font-weight: 800;
-}
-.brand small {
+/* The wordmark fills the wide sidebar; the cube alone stands in the narrow one. */
+.brand-full {
   display: block;
-  font-size: 9px;
-  letter-spacing: 4px;
-  margin-top: 2px;
-  color: #b0c2a9;
+  width: 100%;
+  max-width: 164px;
+  height: auto;
 }
-.brand-symbol {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #678372;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #d4e8af;
+.brand-mark {
+  display: none;
+  width: auto;
+  height: 38px;
 }
 .sidebar-section {
   font-size: 9px;
@@ -1610,7 +1599,6 @@ td .text-link {
     gap: 8px;
   }
   .brand {
-    font-size: 22px;
     padding: 0 6px;
   }
   .header-action {
@@ -1665,11 +1653,14 @@ td .text-link {
     padding: 0;
     justify-content: center;
   }
-  .brand > span:not(.brand-symbol),
+  .brand-full,
   .sidebar-section,
   .territory-card,
   .sidebar-bottom {
     display: none;
+  }
+  .brand-mark {
+    display: block;
   }
   .sidebar nav {
     margin-top: 35px;
@@ -1750,13 +1741,8 @@ td .text-link {
     width: 56px;
     padding: 19px 5px;
   }
-  .brand-symbol {
-    width: 35px;
-    height: 35px;
-    border-radius: 9px;
-  }
-  .brand-symbol svg {
-    width: 22px;
+  .brand-mark {
+    height: 32px;
   }
   .workspace {
     margin-left: 56px;
@@ -2317,10 +2303,17 @@ td .text-link {
 .auth-screen {
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 30px;
   padding: 20px;
   background: var(--dark);
+}
+.auth-logo {
+  width: min(250px, 68vw);
+  height: auto;
+  color: #f2f6e8;
 }
 .auth-wait {
   color: #c4d3c8;
@@ -2333,26 +2326,6 @@ td .text-link {
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 24px 70px #06140f66;
-}
-.auth-brand {
-  display: flex;
-  gap: 11px;
-  align-items: center;
-  font-size: 22px;
-  letter-spacing: 1px;
-  font-weight: 500;
-  color: var(--dark);
-  margin-bottom: 26px;
-}
-.auth-brand .brand-symbol {
-  background: var(--dark);
-  border-color: var(--dark);
-}
-.auth-brand small {
-  display: block;
-  font-size: 8px;
-  letter-spacing: 3px;
-  color: #7c896e;
 }
 .auth-card h1 {
   font-size: 20px;

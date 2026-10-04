@@ -35,6 +35,7 @@ import { api, query, post } from "./api";
 import MapView from "./MapView";
 import DetailPanel, { Badge, TaskRow, eventTime } from "./DetailPanel";
 import { useAccount } from "./AuthGate";
+import { LogoFull, LogoMark } from "./Logo";
 const format = new Intl.NumberFormat("en-US");
 type View = "map" | "follow-ups" | "data";
 const emptySummary: Summary = {
@@ -179,13 +180,8 @@ export default function App() {
           onClick={() => navigate("map")}
           aria-label="Unit 50 home"
         >
-          <span className="brand-symbol">
-            <House size={27} strokeWidth={1.7} />
-          </span>
-          <span>
-            UNIT <b>50</b>
-            <small>FIELDWORK</small>
-          </span>
+          <LogoFull className="brand-full" />
+          <LogoMark className="brand-mark" />
         </a>
         <div className="sidebar-section">WORKSPACE</div>
         <nav>

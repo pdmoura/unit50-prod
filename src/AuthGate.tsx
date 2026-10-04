@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { House, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
+import { LogoFull } from "./Logo";
 import { initAuth, signOut } from "./auth";
 import { api } from "./api";
 
@@ -81,8 +82,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   if (state.step === "failed")
     return (
       <div className="auth-screen">
+        <LogoFull className="auth-logo" />
         <div className="auth-card">
-          <Brand />
           <div className="form-error" role="alert">
             {state.message} Reload the page to try again.
           </div>
@@ -102,19 +103,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Account.Provider>
-  );
-}
-function Brand() {
-  return (
-    <div className="auth-brand">
-      <span className="brand-symbol">
-        <House size={27} strokeWidth={1.7} />
-      </span>
-      <span>
-        UNIT <b>50</b>
-        <small>FIELDWORK</small>
-      </span>
-    </div>
   );
 }
 function SignIn({
@@ -148,8 +136,8 @@ function SignIn({
   }
   return (
     <div className="auth-screen">
+      <LogoFull className="auth-logo" />
       <form className="auth-card" onSubmit={(e) => void submit(e)}>
-        <Brand />
         <h1>Sign in</h1>
         <p>Use the account your administrator created for you.</p>
         {error && (
