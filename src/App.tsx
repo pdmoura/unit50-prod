@@ -36,6 +36,7 @@ import MapView from "./MapView";
 import DetailPanel, { Badge, TaskRow, eventTime } from "./DetailPanel";
 import { useAccount } from "./AuthGate";
 import { LogoFull, LogoMark } from "./Logo";
+import ConfirmDialog from "./ConfirmDialog";
 const format = new Intl.NumberFormat("en-US");
 type View = "map" | "follow-ups" | "data";
 const emptySummary: Summary = {
@@ -70,6 +71,8 @@ export default function App() {
       pageSize: 40,
     }),
     [loading, setLoading] = useState(false),
+    // Sign-out is confirmed first: "asking" shows the dialog, "leaving" waits.
+    [leaving, setLeaving] = useState<"asking" | "leaving" | null>(null),
     [selected, setSelected] = useState<PropertyDetail | null>(null),
     [detailLoading, setDetailLoading] = useState(false);
   const detailRequest = useRef(0),
@@ -246,6 +249,16 @@ export default function App() {
           </div>
           <span className="connection-dot" />
         </div>
+        {account.signOut && (
+          <button
+            className="sidebar-signout"
+            aria-label="Sign out"
+            title="Sign out"
+            onClick={() => setLeaving("asking")}
+          >
+            <LogOut size={21} />
+          </button>
+        )}
       </aside>
       <main className="workspace">
         <header className="topbar">
@@ -263,7 +276,10 @@ export default function App() {
           {account.signOut ? (
             <div className="account">
               <span title={account.email || undefined}>{account.email}</span>
-              <button className="secondary-button" onClick={account.signOut}>
+              <button
+                className="secondary-button"
+                onClick={() => setLeaving("asking")}
+              >
                 <LogOut size={15} />
                 Sign out
               </button>
@@ -620,6 +636,21 @@ export default function App() {
           photosEnabled={summary.photosEnabled}
           onClose={close}
           onChange={changed}
+        />
+      )}
+      {leaving && account.signOut && (
+        <ConfirmDialog
+          title="Sign out of Unit 50?"
+          message="You will need your email and password to sign in again on this device."
+          confirmLabel="Sign out"
+          busyLabel="Signing out…"
+          tone="primary"
+          busy={leaving === "leaving"}
+          onConfirm={() => {
+            setLeaving("leaving");
+            account.signOut!();
+          }}
+          onCancel={() => setLeaving(null)}
         />
       )}
     </div>

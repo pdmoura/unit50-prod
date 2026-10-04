@@ -246,6 +246,27 @@ select {
   align-items: center;
   gap: 9px;
 }
+/* Sign-out for the narrow sidebar, where the top bar scrolls out of reach. */
+.sidebar-signout {
+  display: none;
+  margin-top: auto;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 7px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #c4d3c8;
+  transition: background 0.15s;
+}
+.sidebar-signout:hover {
+  background: #ffffff0a;
+}
+.sidebar-signout:focus-visible {
+  outline: 2px solid #d9e9b9;
+  outline-offset: -2px;
+}
 .workspace-avatar {
   width: 32px;
   height: 32px;
@@ -1662,6 +1683,12 @@ td .text-link {
   .brand-mark {
     display: block;
   }
+  .sidebar {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .sidebar-signout {
+    display: flex;
+  }
   .sidebar nav {
     margin-top: 35px;
   }
@@ -1739,7 +1766,7 @@ td .text-link {
 @media (max-width: 650px) {
   .sidebar {
     width: 56px;
-    padding: 19px 5px;
+    padding: 19px 5px max(19px, env(safe-area-inset-bottom));
   }
   .brand-mark {
     height: 32px;
@@ -2285,9 +2312,9 @@ td .text-link {
   gap: 6px;
   flex-shrink: 0;
 }
-@media (max-width: 650px) {
-  /* The email is in the way on a phone; the button alone says enough. */
-  .topbar .account > span {
+@media (max-width: 900px) {
+  /* With the narrow sidebar, sign-out lives at its foot and stays in view. */
+  .topbar .account {
     display: none;
   }
 }

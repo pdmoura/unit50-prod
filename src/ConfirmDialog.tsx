@@ -1,12 +1,15 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-// In-app confirmation for actions that cannot be undone. On phones it sits at
-// the bottom of the screen, within thumb reach; on wider screens it is centered.
+// In-app confirmation before an action that is hard to take back. On phones it
+// sits at the bottom of the screen, within thumb reach; on wider screens it is
+// centered. The red button is for deleting; "primary" is for anything else.
 export default function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  busyLabel = "Removing…",
+  tone = "danger",
   busy = false,
   onConfirm,
   onCancel,
@@ -14,6 +17,8 @@ export default function ConfirmDialog({
   title: string;
   message: string;
   confirmLabel: string;
+  busyLabel?: string;
+  tone?: "danger" | "primary";
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -60,8 +65,12 @@ export default function ConfirmDialog({
           >
             Cancel
           </button>
-          <button className="danger-button" disabled={busy} onClick={onConfirm}>
-            {busy ? "Removing…" : confirmLabel}
+          <button
+            className={tone === "danger" ? "danger-button" : "primary-button"}
+            disabled={busy}
+            onClick={onConfirm}
+          >
+            {busy ? busyLabel : confirmLabel}
           </button>
         </div>
       </div>
