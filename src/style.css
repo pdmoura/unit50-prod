@@ -2460,30 +2460,6 @@ td .text-link {
     animation: none;
   }
 }
-.topbar .account {
-  gap: 10px;
-  min-width: 0;
-}
-.topbar .account > span {
-  color: #6f7a6c;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.topbar .account .secondary-button {
-  padding: 8px 11px;
-  font-size: 11px;
-  gap: 6px;
-  flex-shrink: 0;
-}
-/* The top-bar sign-out is for a mouse on the wide layout only. Touch screens
-   use the account button at the foot of the sidebar, and the narrow sidebar
-   has its own sign-out icon. */
-@media (max-width: 900px), (hover: none), (pointer: coarse) {
-  .topbar .account {
-    display: none;
-  }
-}
 .sidebar-bottom .who {
   min-width: 0;
 }

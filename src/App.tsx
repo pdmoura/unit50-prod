@@ -327,18 +327,7 @@ export default function App() {
                   : "Follow-ups"}
             </span>
           </div>
-          {account.signOut ? (
-            <div className="account">
-              <span title={account.email || undefined}>{account.email}</span>
-              <button
-                className="secondary-button"
-                onClick={() => setLeaving("asking")}
-              >
-                <LogOut size={15} />
-                Sign out
-              </button>
-            </div>
-          ) : (
+          {!account.signOut && (
             <span className="local-pill">
               <i className="live-dot" />
               LOCAL MVP
