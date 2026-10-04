@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useId, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { LogoFull } from "./Logo";
+import { LogoFull, LogoMark } from "./Logo";
 import { initAuth, signOut } from "./auth";
 import { api } from "./api";
 import { hideSplash } from "./splash";
@@ -181,8 +181,17 @@ function SignIn({
             {shown ? <EyeOff size={19} /> : <Eye size={19} />}
           </button>
         </div>
-        <button className="primary-button full" disabled={busy}>
-          <LogIn size={17} />
+        <button
+          className={`primary-button full ${busy ? "is-busy" : ""}`}
+          disabled={busy}
+        >
+          {busy ? (
+            <span className="button-spin" aria-hidden="true">
+              <LogoMark />
+            </span>
+          ) : (
+            <LogIn size={17} />
+          )}
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>

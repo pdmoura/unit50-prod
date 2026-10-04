@@ -2393,6 +2393,26 @@ td .text-link {
   /* 16px keeps phones from zooming the page when the field is focused. */
   font-size: 16px;
 }
+/* While signing in, the button keeps its color and the logo turns inside it,
+   the same way it does on the loading screen. */
+.auth-card .primary-button.is-busy {
+  opacity: 0.9;
+  cursor: progress;
+}
+.button-spin {
+  display: grid;
+  width: 17px;
+  animation: logo-spin 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.button-spin svg {
+  width: 100%;
+  height: auto;
+}
+@keyframes logo-spin {
+  to {
+    transform: rotateY(360deg);
+  }
+}
 /* The password box with its show/hide eye at the right edge. */
 .auth-card label[for] {
   margin-bottom: 0;
