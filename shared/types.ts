@@ -82,6 +82,10 @@ export interface Property {
   quality: number | null;
   condition: number | null;
   accountType: string | null;
+  // A point on the road in front of the property and the direction to face it.
+  streetLat: number | null;
+  streetLng: number | null;
+  streetHeading: number | null;
   status: ProspectStatus;
   priority: Priority;
   age: number | null;

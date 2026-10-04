@@ -24,6 +24,21 @@ import {
 import { post, patch } from "./api";
 import CountyPanel from "./CountyPanel";
 import PhotoSection from "./PhotoSection";
+// Opens Street View on the road in front of the property, facing it. Without
+// a heading Google faces north, so the stored road point and direction are
+// used when known; the parcel position alone is the fallback.
+export function streetViewUrl(p: {
+  lat: number | null;
+  lng: number | null;
+  streetLat: number | null;
+  streetLng: number | null;
+  streetHeading: number | null;
+}) {
+  const base = "https://www.google.com/maps/@?api=1&map_action=pano";
+  return p.streetLat != null && p.streetLng != null && p.streetHeading != null
+    ? `${base}&viewpoint=${p.streetLat.toFixed(6)},${p.streetLng.toFixed(6)}&heading=${Math.round(p.streetHeading)}&pitch=0&fov=80`
+    : `${base}&viewpoint=${p.lat},${p.lng}`;
+}
 export function Badge({ value }: { value: string }) {
   return (
     <span className={`badge ${value.toLowerCase().replaceAll(" ", "-")}`}>
@@ -238,7 +253,7 @@ export default function DetailPanel({
               {p.lat != null && p.lng != null && (
                 <a
                   className="secondary-button"
-                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}`}
+                  href={streetViewUrl(p)}
                   target="_blank"
                   rel="noreferrer"
                 >

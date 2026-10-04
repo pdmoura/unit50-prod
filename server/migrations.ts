@@ -167,4 +167,14 @@ CREATE TABLE app_users (
 ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 `,
   },
+  {
+    version: 5,
+    sql: `
+-- Where Street View should stand (a point on the road in front of the
+-- property) and the compass direction to face it. Filled by scripts/street-view.ts.
+ALTER TABLE properties ADD COLUMN street_lat double precision;
+ALTER TABLE properties ADD COLUMN street_lng double precision;
+ALTER TABLE properties ADD COLUMN street_heading double precision;
+`,
+  },
 ];
