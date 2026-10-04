@@ -78,6 +78,7 @@ test("photos: signed ticket, verified attach, listing and removal from Cloudinar
     allowImports: false,
     cloudinary: config,
     fetcher,
+    auth: null,
   });
   try {
     const sql = openDb(TEST_DATABASE_URL, schema);

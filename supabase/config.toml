@@ -1,0 +1,7 @@
+# Settings for the hosted Supabase project, applied with `supabase config push`.
+# Only what is declared here is pushed; everything else stays as set in the dashboard.
+project_id = "unit50-prod"
+
+[auth]
+# Accounts are created by an administrator. Nobody can sign up on their own.
+enable_signup = false

@@ -155,4 +155,16 @@ CREATE INDEX property_photos_parcel ON property_photos (property_id, created_at)
 ALTER TABLE property_photos ENABLE ROW LEVEL SECURITY;
 `,
   },
+  {
+    version: 4,
+    sql: `
+-- People allowed to use the app. Supabase Auth proves who someone is; a row
+-- here (their sign-in email, lower case) is what lets them in.
+CREATE TABLE app_users (
+  email text PRIMARY KEY CHECK (email = lower(email)),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
+`,
+  },
 ];

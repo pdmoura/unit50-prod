@@ -3,8 +3,11 @@ import { createRoot } from "react-dom/client";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./style.css";
 import App from "./App";
+import AuthGate from "./AuthGate";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <AuthGate>
+      <App />
+    </AuthGate>
   </React.StrictMode>,
 );

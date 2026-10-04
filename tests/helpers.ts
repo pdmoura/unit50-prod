@@ -3,11 +3,19 @@ import { existsSync } from "node:fs";
 import { openDb, migrate, type Db } from "../server/db.js";
 
 if (existsSync(".env")) process.loadEnvFile(".env");
-// Tests never touch the app's own tables: each one gets a private schema in
-// the test database (the local docker-compose one unless TEST_DATABASE_URL is set).
-export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ||
-  "postgres://unit50:unit50@127.0.0.1:54350/unit50_test";
+// Tests never touch the app's own tables or the production database: each one
+// gets a private schema in "<dev database>_test" on the DATABASE_URL_DEV
+// server (or in TEST_DATABASE_URL when that is set). DATABASE_URL is never read.
+function testDatabaseUrl() {
+  if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL;
+  const url = new URL(
+    process.env.DATABASE_URL_DEV ||
+      "postgres://unit50:unit50@127.0.0.1:54350/unit50",
+  );
+  url.pathname = `${url.pathname}_test`;
+  return url.href;
+}
+export const TEST_DATABASE_URL = testDatabaseUrl();
 
 export async function createSchema() {
   const schema = `t_${randomUUID().replaceAll("-", "")}`,

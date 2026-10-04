@@ -47,6 +47,14 @@ import {
   refreshCountyDetails,
   runCountyDetails,
 } from "./parcelsearch.js";
+import {
+  authConfig,
+  supabaseVerifier,
+  cached,
+  type AuthConfig,
+  type AuthUser,
+  type TokenVerifier,
+} from "./auth.js";
 
 const str = (maxLength = 200) => ({ type: "string", maxLength });
 const object = (
@@ -97,12 +105,19 @@ export async function createApp(
     // null turns property photos off; undefined reads the CLOUDINARY_* variables.
     cloudinary?: CloudinaryConfig | null;
     fetcher?: Fetcher;
+    // null turns sign-in off (the server then only answers local requests);
+    // undefined reads the SUPABASE_* variables. verify replaces the Supabase check.
+    auth?: (AuthConfig & { verify?: TokenVerifier }) | null;
   } = {},
 ) {
   const sql = openDb(options.databaseUrl, options.schema);
   await migrate(sql);
   const cloudinary =
     options.cloudinary === undefined ? cloudinaryConfig() : options.cloudinary;
+  const auth: (AuthConfig & { verify?: TokenVerifier }) | null =
+    options.auth === undefined ? authConfig() : options.auth;
+  const verify = auth && cached(auth.verify || supabaseVerifier(auth));
+  const signedIn = new WeakMap<object, AuthUser>();
   // Any run from a prior process is gone. Never activate its partial staging rows.
   await sql.begin(async (tx) => {
     const now = new Date().toISOString();
@@ -119,20 +134,41 @@ export async function createApp(
     fetchingDetails = false;
   const indices = new Map<string, Supercluster<any, any>>();
   let lastRevision = "";
+  const openPaths = new Set(["/api/health", "/api/config"]);
   app.addHook("onRequest", async (req, reply) => {
-    const host = req.headers.host || "";
-    if (!/^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(host))
-      return reply.code(403).send({ error: "Local access only." });
-    const allowedOrigins = new Set(
-      [process.env.PORT || "3000", "5173", "3100"].flatMap((port) => [
-        `http://127.0.0.1:${port}`,
-        `http://localhost:${port}`,
-      ]),
-    );
-    if (req.headers.origin && !allowedOrigins.has(req.headers.origin))
-      return reply.code(403).send({ error: "Origin not allowed." });
     reply.header("X-Content-Type-Options", "nosniff");
-    if (req.url.startsWith("/api/")) reply.header("Cache-Control", "no-store");
+    // The app is never meant to be embedded in another site.
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("Referrer-Policy", "same-origin");
+    const path = req.url.split("?")[0];
+    if (path.startsWith("/api/")) reply.header("Cache-Control", "no-store");
+    if (!verify) {
+      // Without sign-in the server is a single-user tool for this computer only.
+      const host = req.headers.host || "";
+      if (!/^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(host))
+        return reply.code(403).send({ error: "Local access only." });
+      const allowedOrigins = new Set(
+        [process.env.PORT || "3000", "5173", "3100"].flatMap((port) => [
+          `http://127.0.0.1:${port}`,
+          `http://localhost:${port}`,
+        ]),
+      );
+      if (req.headers.origin && !allowedOrigins.has(req.headers.origin))
+        return reply.code(403).send({ error: "Origin not allowed." });
+      return;
+    }
+    // The page itself is public; every API call needs a signed-in, enabled user.
+    if (!path.startsWith("/api/") || openPaths.has(path)) return;
+    const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1];
+    const user = token ? await verify(token) : null;
+    if (!user) return reply.code(401).send({ error: "Sign in to continue." });
+    const [enabled] =
+      await sql`SELECT 1 FROM app_users WHERE email=${user.email}`;
+    if (!enabled)
+      return reply
+        .code(403)
+        .send({ error: "This account is not enabled for Unit 50." });
+    signedIn.set(req, user);
   });
   app.setErrorHandler((error, _req, reply) => {
     const e = error as Error & { statusCode?: number; validation?: unknown };
@@ -146,6 +182,13 @@ export async function createApp(
     });
   });
   app.get("/api/health", async () => ({ ok: true }));
+  // What the browser needs to show the sign-in screen. Both values are public.
+  app.get("/api/config", async () => ({
+    auth: auth ? { url: auth.url, key: auth.key } : null,
+  }));
+  app.get("/api/me", async (req) => ({
+    email: signedIn.get(req)?.email ?? null,
+  }));
   app.get("/api/summary", async (): Promise<Summary> => {
     const [[row], [visited], [due], cities, latest] = await Promise.all([
       sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE (${prioritySql(sql)})='High')::int AS high, COUNT(*) FILTER (WHERE p.lng IS NOT NULL)::int AS mapped FROM properties p WHERE p.active`,

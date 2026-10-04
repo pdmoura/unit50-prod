@@ -9,14 +9,23 @@ Requisitos: **Node.js 24.15 ou superior da série 24**, com npm, e um banco **Po
 Na pasta do projeto:
 
 ```powershell
-Copy-Item .env.example .env   # ajuste DATABASE_URL e as variáveis CLOUDINARY_*
+Copy-Item .env.example .env   # ajuste DATABASE_URL, DATABASE_URL_DEV e as variáveis CLOUDINARY_*
 npm run db:up                 # só para o banco local em Docker (porta 54350)
 npm ci
 npm run build
 npm start
 ```
 
-`DATABASE_URL` define o banco. Para o Supabase, use a string **Session pooler** do botão **Connect**. As tabelas são criadas ou atualizadas automaticamente ao iniciar.
+Dois bancos, escolhidos pela forma de iniciar:
+
+| Comando             | Banco usado                                           |
+| ------------------- | ----------------------------------------------------- |
+| `npm start`         | `DATABASE_URL` (produção, por exemplo o Supabase)     |
+| `npm run dev`       | `DATABASE_URL_DEV` (Postgres local em Docker)         |
+| `npm run start:dev` | `DATABASE_URL_DEV`, com a versão compilada            |
+| `npm test`          | banco `<nome>_test` no servidor de `DATABASE_URL_DEV` |
+
+Para o Supabase, use a string **Session pooler** do botão **Connect**. Bancos fora da própria máquina são acessados com TLS; acrescente `?sslmode=disable` à URL se o servidor não oferecer TLS. O servidor registra no log, ao iniciar, o host e o nome do banco em uso. As tabelas são criadas ou atualizadas automaticamente ao iniciar.
 
 Abra **http://127.0.0.1:3000**. Para encerrar, pressione `Ctrl+C` no terminal do servidor. Execute apenas uma instância por banco de dados. Não inicie `dev` enquanto `start` estiver rodando.
 
@@ -92,6 +101,21 @@ O valor cadastral original é preservado, inclusive frações. Ele pode ser uma 
 
 O mapa-base utiliza [OpenStreetMap](https://www.openstreetmap.org/copyright), com atribuição visível e [política de uso de tiles](https://operations.osmfoundation.org/policies/tiles/) respeitada: sem pré-carregamento ou download em massa. A internet é necessária para importação, mapa-base e fontes tipográficas externas. Sem rede, registros já importados e atividades continuam disponíveis na lista; fontes têm fallback local.
 
+## Login (Supabase Auth)
+
+Com `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` definidos, o aplicativo exige login por email e senha. O navegador entra pelo Supabase Auth e envia o token em cada chamada da API; o servidor confere o token com o Supabase e só aceita emails confirmados que estejam na tabela `app_users`. Não há cadastro pelo aplicativo, e o cadastro público está desativado no projeto Supabase (`supabase/config.toml`, `enable_signup = false`).
+
+Para liberar uma pessoa:
+
+1. No painel do Supabase: **Authentication → Users → Add user → Create new user**, com email, senha e **Auto Confirm User** marcado.
+2. Na pasta do projeto: `npx tsx scripts/allow-user.ts pessoa@empresa.com` (acrescente `--dev` para o banco local, `--remove` para retirar o acesso, `--list` para ver quem está liberado).
+
+Sem essas duas variáveis o aplicativo roda sem login e aceita conexões apenas da própria máquina; o servidor se recusa a iniciar num endereço público nessa condição.
+
+## Publicação (Render)
+
+`render.yaml` descreve o serviço: Node, região Oregon (ao lado do banco no Supabase), build `npm ci --include=dev && npm run build`, início `npm start`, verificação em `/api/health`. As variáveis `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `CLOUDINARY_*` são definidas no painel do Render. Cada push na branch `main` gera um novo deploy. A importação do condado e a leitura em lote do Parcel Search são pesadas para uma instância pequena; rode-as do seu computador com `npm start` (mesmo banco).
+
 ## Fotos do imóvel (Cloudinary)
 
 Na ficha do imóvel, **Add photo** abre a câmera ou a galeria. O arquivo vai direto do navegador para o Cloudinary, com uma assinatura de uso único emitida pelo servidor; o segredo da API nunca chega ao navegador. O Cloudinary devolve um comprovante assinado, que o servidor confere antes de gravar a foto em `property_photos`. Remover a foto apaga primeiro a imagem no Cloudinary e depois o registro.
@@ -102,7 +126,7 @@ Na ficha do imóvel, **Add photo** abre a câmera ou a galeria. O arquivo vai di
 
 ## Banco, backup e recuperação
 
-Banco PostgreSQL definido em `DATABASE_URL`. As migrações ficam em `server/migrations.ts`, são registradas na tabela `schema_migrations` e aplicadas ao iniciar o servidor. Não apague o banco para atualizar os dados.
+Banco PostgreSQL definido em `DATABASE_URL` (produção) ou `DATABASE_URL_DEV` (desenvolvimento, com `--dev`). As migrações ficam em `server/migrations.ts`, são registradas na tabela `schema_migrations` e aplicadas ao iniciar o servidor. Não apague o banco para atualizar os dados.
 
 Banco local (Docker): `npm run db:up` cria o Postgres em `127.0.0.1:54350` com volume persistente. Para uma cópia de segurança:
 
@@ -123,7 +147,7 @@ npm run build
 npm run test:e2e
 ```
 
-- Os testes precisam do Postgres local (`npm run db:up`) com o banco `unit50_test`, ou de `TEST_DATABASE_URL`. Cada teste cria e apaga um schema próprio; **nenhum teste usa as tabelas do aplicativo**.
+- Os testes precisam do Postgres local (`npm run db:up`) com o banco `unit50_test`, ou de `TEST_DATABASE_URL`. Cada teste cria e apaga um schema próprio; **nenhum teste usa as tabelas do aplicativo, e `DATABASE_URL` (produção) nunca é lido pelos testes**.
 - Testes unitários e de integração: prioridades e frações, datas, IDs, geometrias, conflitos, carga incompleta, parcelas inativas, bloqueio de contato, validação de API, filtros, persistência após reinício do servidor, páginas do Parcel Search e fotos (assinatura, conferência do comprovante e remoção) com um Cloudinary simulado.
 - Testes de navegador: usam Microsoft Edge instalado e um servidor temporário em `127.0.0.1:3100` com parcelas artificiais.
 - O fluxo automatizado cobre imóvel → visita → retorno → recarregamento → conclusão → bloqueio de contato. Também verifica filtros e largura de 390 px.
@@ -159,4 +183,4 @@ Os erros retornam JSON `{ "error": "mensagem" }`. Entradas inválidas retornam 4
 
 ## Limites desta entrega
 
-Sem login e sem publicação na internet: o servidor ainda aceita conexões apenas da própria máquina. Sem fotos geradas, orçamentos, financiamento ou mensagens automáticas. A fonte GIS pode mudar ou ficar indisponível; o aplicativo preserva a última base completa. Prioridade por idade é a única classificação comercial automática.
+Todos os usuários liberados têm o mesmo acesso (não há perfis de administrador ou representante). Sem fotos geradas, orçamentos, financiamento ou mensagens automáticas. A fonte GIS pode mudar ou ficar indisponível; o aplicativo preserva a última base completa. Prioridade por idade é a única classificação comercial automática.

@@ -1,0 +1,28 @@
+# Render blueprint for the web service. Secrets are entered in the Render
+# dashboard (sync: false), never stored in this file.
+services:
+  - type: web
+    name: unit50
+    runtime: node
+    region: oregon # next to the Supabase database (us-west-2)
+    plan: free
+    branch: main
+    # Dev dependencies (TypeScript, Vite) are needed to build.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: unit50-uploads

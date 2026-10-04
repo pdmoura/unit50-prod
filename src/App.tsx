@@ -19,6 +19,7 @@ import {
   Compass,
   X,
   PanelLeftClose,
+  LogOut,
 } from "lucide-react";
 import type {
   Filters,
@@ -33,6 +34,7 @@ import { PRIORITIES, STATUSES, utahToday } from "../shared/types";
 import { api, query, post } from "./api";
 import MapView from "./MapView";
 import DetailPanel, { Badge, TaskRow, eventTime } from "./DetailPanel";
+import { useAccount } from "./AuthGate";
 const format = new Intl.NumberFormat("en-US");
 type View = "map" | "follow-ups" | "data";
 const emptySummary: Summary = {
@@ -47,6 +49,7 @@ const emptySummary: Summary = {
   photosEnabled: false,
 };
 export default function App() {
+  const account = useAccount();
   const [view, setView] = useState<View>(
       (location.hash.slice(1) as View) || "map",
     ),
@@ -214,6 +217,12 @@ export default function App() {
             <Database size={20} />
             Data & imports
           </a>
+          {account.signOut && (
+            <button onClick={account.signOut}>
+              <LogOut size={20} />
+              Sign out
+            </button>
+          )}
         </nav>
         <div className="territory-card">
           <span className="eyebrow">YOUR TERRITORY</span>
@@ -236,10 +245,14 @@ export default function App() {
           </div>
         </div>
         <div className="sidebar-bottom">
-          <span className="workspace-avatar">U</span>
+          <span className="workspace-avatar">
+            {(account.email || "U")[0].toUpperCase()}
+          </span>
           <div>
-            <strong>Local workspace</strong>
-            <span>Saved on this computer</span>
+            <strong>{account.email ? "Signed in" : "Local workspace"}</strong>
+            <span title={account.email || undefined}>
+              {account.email || "Saved on this computer"}
+            </span>
           </div>
           <span className="connection-dot" />
         </div>
@@ -257,10 +270,12 @@ export default function App() {
                   : "Follow-ups"}
             </span>
           </div>
-          <span className="local-pill">
-            <i className="live-dot" />
-            LOCAL MVP
-          </span>
+          {!account.email && (
+            <span className="local-pill">
+              <i className="live-dot" />
+              LOCAL MVP
+            </span>
+          )}
         </header>
         <div className="page-heading">
           <div>

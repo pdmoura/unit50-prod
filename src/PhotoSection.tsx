@@ -2,18 +2,15 @@ import { useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import type { PropertyDetail, UploadTicket } from "../shared/types";
 import { post, del } from "./api";
+import PhotoViewer from "./PhotoViewer";
+import ConfirmDialog from "./ConfirmDialog";
 
 const MAX_BYTES = 15 * 1024 * 1024;
-// Cloudinary resizes on the fly: a small square for the grid, the original on tap.
+// Cloudinary resizes on the fly: a small square for the grid.
 const thumbnail = (url: string) =>
   url.replace(
     "/image/upload/",
     "/image/upload/c_fill,w_240,h_240,q_auto,f_auto/",
-  );
-const full = (url: string) =>
-  url.replace(
-    "/image/upload/",
-    "/image/upload/c_limit,w_1600,h_1600,q_auto,f_auto/",
   );
 
 export default function PhotoSection({
@@ -27,7 +24,10 @@ export default function PhotoSection({
 }) {
   const input = useRef<HTMLInputElement>(null),
     [busy, setBusy] = useState(""),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [viewing, setViewing] = useState<number | null>(null),
+    [removing, setRemoving] = useState<string | null>(null);
+  const label = `Photo of ${p.address || `parcel ${p.id}`}`;
   const path = `/properties/${encodeURIComponent(p.id)}/photos`;
   async function add(file: File) {
     setError("");
@@ -69,7 +69,6 @@ export default function PhotoSection({
     }
   }
   async function remove(id: string) {
-    if (!confirm("Remove this photo? It is deleted permanently.")) return;
     setError("");
     setBusy("Removing…");
     try {
@@ -79,6 +78,7 @@ export default function PhotoSection({
       setError((e as Error).message);
     } finally {
       setBusy("");
+      setRemoving(null);
     }
   }
   if (!enabled && !p.photos.length) return null;
@@ -90,22 +90,22 @@ export default function PhotoSection({
       </div>
       {p.photos.length > 0 && (
         <div className="photo-grid">
-          {p.photos.map((photo) => (
+          {p.photos.map((photo, i) => (
             <figure key={photo.id}>
-              <a href={full(photo.url)} target="_blank" rel="noreferrer">
-                <img
-                  src={thumbnail(photo.url)}
-                  alt={`Photo of ${p.address || `parcel ${p.id}`}`}
-                  loading="lazy"
-                />
-              </a>
+              <button
+                className="photo-open"
+                aria-label={`View photo ${i + 1} of ${p.photos.length}`}
+                onClick={() => setViewing(i)}
+              >
+                <img src={thumbnail(photo.url)} alt={label} loading="lazy" />
+              </button>
               {enabled && (
                 <button
                   className="icon-button"
                   aria-label="Remove photo"
                   title="Remove photo"
                   disabled={Boolean(busy)}
-                  onClick={() => void remove(photo.id)}
+                  onClick={() => setRemoving(photo.id)}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -142,6 +142,24 @@ export default function PhotoSection({
             {busy || "Add photo"}
           </button>
         </>
+      )}
+      {viewing !== null && p.photos.length > 0 && (
+        <PhotoViewer
+          photos={p.photos}
+          start={Math.min(viewing, p.photos.length - 1)}
+          label={label}
+          onClose={() => setViewing(null)}
+        />
+      )}
+      {removing && (
+        <ConfirmDialog
+          title="Remove this photo?"
+          message="It will be deleted permanently for everyone. This cannot be undone."
+          confirmLabel="Remove photo"
+          busy={Boolean(busy)}
+          onConfirm={() => void remove(removing)}
+          onCancel={() => setRemoving(null)}
+        />
       )}
     </>
   );

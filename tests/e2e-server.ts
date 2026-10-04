@@ -15,6 +15,7 @@ const app = await createApp({
   schema,
   allowImports: false,
   cloudinary: null,
+  auth: null,
 });
 const sql = openDb(TEST_DATABASE_URL, schema);
 await startImport(sql, "test");

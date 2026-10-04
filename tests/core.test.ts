@@ -153,6 +153,7 @@ test("HTTP flow survives server restart, validates inputs and returns matching m
     schema,
     allowImports: false,
     cloudinary: null,
+    auth: null,
   };
   let app: Awaited<ReturnType<typeof createApp>> | null = null;
   try {

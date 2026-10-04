@@ -17,14 +17,21 @@ import {
 } from "../shared/types.js";
 import { MIGRATIONS } from "./migrations.js";
 
-export const databaseUrl = () => {
-  const url = process.env.DATABASE_URL;
+// The server uses DATABASE_URL (production) unless it is started with --dev,
+// which selects DATABASE_URL_DEV (the local docker-compose database).
+export const devMode = () => process.argv.includes("--dev");
+export function databaseUrl(dev = devMode()) {
+  const name = dev ? "DATABASE_URL_DEV" : "DATABASE_URL",
+    url = process.env[name];
   if (!url)
-    throw new Error(
-      "DATABASE_URL is not set. Add it to .env (see .env.example).",
-    );
+    throw new Error(`${name} is not set. Add it to .env (see .env.example).`);
   return url;
-};
+}
+// Host and database name only, safe to print in logs.
+export function describeDatabase(url: string) {
+  const u = new URL(url);
+  return `${u.hostname}:${u.port || 5432}/${u.pathname.slice(1)}`;
+}
 export class AppError extends Error {
   constructor(
     public statusCode: number,
@@ -36,9 +43,17 @@ export class AppError extends Error {
 // Rows come back with camelCase keys, dates as YYYY-MM-DD strings and
 // timestamps as ISO strings, matching the shapes in shared/types.ts.
 export function openDb(url = databaseUrl(), schema?: string) {
+  const target = new URL(url),
+    local = ["127.0.0.1", "localhost", "::1"].includes(target.hostname);
   return postgres(url, {
     max: 10,
     onnotice: () => {},
+    // Hosted databases are reached over TLS unless the URL sets sslmode itself.
+    ...(local || target.searchParams.has("sslmode")
+      ? {}
+      : { ssl: "require" as const }),
+    // Supabase's transaction pooler (port 6543) cannot keep prepared statements.
+    prepare: target.port !== "6543",
     connection: schema ? { search_path: schema } : {},
     transform: {
       column: { to: postgres.fromCamel, from: postgres.toCamel },
