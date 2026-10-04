@@ -139,7 +139,9 @@ export async function createApp(
     reply.header("X-Content-Type-Options", "nosniff");
     // The app is never meant to be embedded in another site.
     reply.header("X-Frame-Options", "DENY");
-    reply.header("Referrer-Policy", "same-origin");
+    // Other sites learn only our address, never the page path. The map tile
+    // servers (OpenStreetMap) refuse requests that arrive with no referrer at all.
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
     const path = req.url.split("?")[0];
     if (path.startsWith("/api/")) reply.header("Cache-Control", "no-store");
     if (!verify) {

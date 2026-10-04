@@ -192,6 +192,11 @@ test("HTTP flow survives server restart, validates inputs and returns matching m
     const list = await app.inject("/api/properties?priority=High");
     assert.equal(list.json().total, 1);
     assert.equal(map.json().features[0].properties.id, list.json().items[0].id);
+    // OpenStreetMap blocks map tiles requested without a referrer.
+    assert.equal(
+      (await app.inject("/api/health")).headers["referrer-policy"],
+      "strict-origin-when-cross-origin",
+    );
     const summary = (await app.inject("/api/summary")).json();
     assert.deepEqual(
       [summary.total, summary.high, summary.mapped, summary.visited],
