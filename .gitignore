@@ -4,6 +4,7 @@ dist-server/
 test-results/
 playwright-report/
 tmp/
+street-view-report/
 *.log
 .env
 .env.*

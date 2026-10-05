@@ -124,6 +124,39 @@ Na ficha do imóvel, **Add photo** abre a câmera ou a galeria. O arquivo vai di
 - Use uma chave restrita à pasta. `scripts/cloudinary-folder-access.mjs` concede o papel Manager nessa pasta (ver comentários no arquivo).
 - Limites: 30 fotos por imóvel, 15 MB por arquivo, formatos JPG, PNG, WebP e HEIC.
 
+## Street View: posição da câmera e cobertura
+
+O botão **Street View** da ficha abre o Google Maps na rua em frente ao imóvel, já virado para ele. Dois scripts de linha de comando preparam isso; nenhum deles roda sozinho.
+
+**1. Posição e direção** (`scripts/street-view.ts`): calcula, a partir das ruas do OpenStreetMap, um ponto na rua em frente a cada imóvel e a direção para olhar. Rode de novo depois de uma importação do condado, para cobrir parcelas novas.
+
+```powershell
+npx tsx scripts/street-view.ts          # produção (DATABASE_URL)
+npx tsx scripts/street-view.ts --dev    # banco local (DATABASE_URL_DEV)
+```
+
+**2. Cobertura** (`scripts/street-view-check.ts`): pergunta ao Google, imóvel por imóvel, se existe imagem de Street View naquele ponto, e grava a resposta em `properties.street_view_status` (`available` ou `none`) e o ID do panorama em `street_view_pano`.
+
+- Usa a consulta de _metadata_ da Street View Static API, que é gratuita. **Nenhuma imagem é baixada nem guardada**: os termos do Google Maps Platform proíbem armazenar ou re-hospedar imagens do Street View (por exemplo, no Cloudinary) e baixá-las em massa. O ID do panorama pode ser guardado.
+- Precisa de `GOOGLE_MAPS_API_KEY` no `.env`: no Google Cloud, crie um projeto com faturamento ativo, habilite a **Street View Static API** e crie uma chave restrita a essa API. `GOOGLE_MAPS_SIGNING_SECRET` (segredo de assinatura de URL) é opcional. Nunca use o prefixo `VITE_` nessas variáveis.
+
+```powershell
+npx tsx scripts/street-view-check.ts --id 190880007 --dev   # um imóvel
+npx tsx scripts/street-view-check.ts --limit 20 --dev       # piloto com 20
+npx tsx scripts/street-view-check.ts --limit 20             # piloto em produção
+npx tsx scripts/street-view-check.ts --all                  # todos os que faltam
+```
+
+- Para **retomar** depois de uma interrupção, rode o mesmo comando outra vez: imóveis que já têm resposta são pulados.
+- Opções: `--concurrency 4` (1 a 16 consultas ao mesmo tempo), `--dry-run` (consulta e relata, sem gravar no banco), `--retry-uncertain` (olha de novo os casos incertos).
+- Resultados possíveis por imóvel:
+  - `available`: há imagem a até 25 m do ponto esperado na rua. Gravado no banco.
+  - `none`: o Google confirmou que não há imagem perto do ponto na rua nem a até 150 m da parcela. Gravado no banco.
+  - `uncertain`: há imagem por perto, mas não em frente (ou o imóvel não tem ponto na rua). Não é gravado; vai para revisão.
+  - `failed`: a consulta não funcionou (tempo esgotado, erro do servidor, limite de uso). Não é gravado e nunca vira `none`; a próxima execução tenta de novo.
+- Chave recusada pelo Google ou 25 falhas seguidas interrompem a execução, em vez de marcar o condado inteiro como falha.
+- Progresso e problemas ficam na pasta local `street-view-report/` (fora do Git): `checkpoint-<banco>.jsonl` (uma linha por imóvel consultado), `report-<banco>.json` (totais da última execução) e `review-<banco>.csv` (incertos e falhas, com endereço).
+
 ## Banco, backup e recuperação
 
 Banco PostgreSQL definido em `DATABASE_URL` (produção) ou `DATABASE_URL_DEV` (desenvolvimento, com `--dev`). As migrações ficam em `server/migrations.ts`, são registradas na tabela `schema_migrations` e aplicadas ao iniciar o servidor. Não apague o banco para atualizar os dados.
@@ -148,7 +181,7 @@ npm run test:e2e
 ```
 
 - Os testes precisam do Postgres local (`npm run db:up`) com o banco `unit50_test`, ou de `TEST_DATABASE_URL`. Cada teste cria e apaga um schema próprio; **nenhum teste usa as tabelas do aplicativo, e `DATABASE_URL` (produção) nunca é lido pelos testes**.
-- Testes unitários e de integração: prioridades e frações, datas, IDs, geometrias, conflitos, carga incompleta, parcelas inativas, bloqueio de contato, validação de API, filtros, persistência após reinício do servidor, páginas do Parcel Search e fotos (assinatura, conferência do comprovante e remoção) com um Cloudinary simulado.
+- Testes unitários e de integração: prioridades e frações, datas, IDs, geometrias, conflitos, carga incompleta, parcelas inativas, bloqueio de contato, validação de API, filtros, persistência após reinício do servidor, páginas do Parcel Search, fotos (assinatura, conferência do comprovante e remoção) com um Cloudinary simulado, e a verificação de cobertura do Street View com um Google simulado.
 - Testes de navegador: usam Microsoft Edge instalado e um servidor temporário em `127.0.0.1:3100` com parcelas artificiais.
 - O fluxo automatizado cobre imóvel → visita → retorno → recarregamento → conclusão → bloqueio de contato. Também verifica filtros e largura de 390 px.
 - Capturas de tela e traces de falhas são gravados em `test-results/`.

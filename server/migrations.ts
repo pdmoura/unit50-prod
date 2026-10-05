@@ -177,4 +177,15 @@ ALTER TABLE properties ADD COLUMN street_lng double precision;
 ALTER TABLE properties ADD COLUMN street_heading double precision;
 `,
   },
+  {
+    version: 6,
+    sql: `
+-- Whether Google has Street View imagery in front of the property, as found by
+-- scripts/street-view-check.ts: 'available' or 'none'; NULL means not checked
+-- or not certain. The panorama ID names the exact picture (Google's terms allow
+-- storing the ID, not the picture itself).
+ALTER TABLE properties ADD COLUMN street_view_status text CHECK (street_view_status IN ('available', 'none'));
+ALTER TABLE properties ADD COLUMN street_view_pano text;
+`,
+  },
 ];
