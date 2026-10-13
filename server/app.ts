@@ -9,9 +9,16 @@ import {
   PRIORITIES,
   utahToday,
   priorityFor,
+  MODULES,
+  LEAD_STAGES,
+  type Account,
   type Filters,
   type Summary,
   type DetailsCoverage,
+  type LeadStage,
+  type Module,
+  type Role,
+  type TeamMember,
 } from "../shared/types.js";
 import { runImport } from "./importer.js";
 import {
@@ -41,7 +48,16 @@ import {
   followUps,
   updateFollowUp,
   requireProperty,
+  ownerScope,
 } from "./db.js";
+import { areaFor, allowed, accountFrom, LOCAL_ACCOUNT } from "./access.js";
+import {
+  verifyWebhook,
+  parseLeadEvent,
+  saveLead,
+  listLeads,
+  updateLead,
+} from "./leads.js";
 import {
   detailsRun,
   refreshCountyDetails,
@@ -52,7 +68,6 @@ import {
   supabaseVerifier,
   cached,
   type AuthConfig,
-  type AuthUser,
   type TokenVerifier,
 } from "./auth.js";
 
@@ -63,6 +78,14 @@ const object = (
 ) => ({ type: "object", properties, required, additionalProperties: false });
 const status = { type: "string", enum: [...STATUSES] };
 const idParams = object({ id: str(100) }, ["id"]);
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const emailParams = object({ email: str(254) }, ["email"]);
+const roleSchema = { type: "string", enum: ["admin", "rep"] };
+const modulesSchema = {
+  type: "array",
+  items: { type: "string", enum: [...MODULES] },
+  uniqueItems: true,
+};
 const filterSchema = {
   q: str(),
   city: str(),
@@ -108,6 +131,9 @@ export async function createApp(
     // null turns sign-in off (the server then only answers local requests);
     // undefined reads the SUPABASE_* variables. verify replaces the Supabase check.
     auth?: (AuthConfig & { verify?: TokenVerifier }) | null;
+    // Shared secret for leads sent by the website; null turns the webhook off,
+    // undefined reads LEADS_WEBHOOK_SECRET.
+    leadsWebhookSecret?: string | null;
   } = {},
 ) {
   const sql = openDb(options.databaseUrl, options.schema);
@@ -118,7 +144,14 @@ export async function createApp(
     options.auth === undefined ? authConfig() : options.auth;
   const tokens = auth && cached(auth.verify || supabaseVerifier(auth));
   const bearer = (header?: string) => /^Bearer (.+)$/.exec(header || "")?.[1];
-  const signedIn = new WeakMap<object, AuthUser>();
+  const webhookSecret =
+    options.leadsWebhookSecret === undefined
+      ? process.env.LEADS_WEBHOOK_SECRET || null
+      : options.leadsWebhookSecret;
+  // Who made each request. Without sign-in it is the local owner (an admin).
+  const accounts = new WeakMap<object, Account>();
+  const who = (req: object) => accounts.get(req) ?? LOCAL_ACCOUNT;
+  const rawBodies = new WeakMap<object, string>();
   // Any run from a prior process is gone. Never activate its partial staging rows.
   await sql.begin(async (tx) => {
     const now = new Date().toISOString();
@@ -135,7 +168,12 @@ export async function createApp(
     fetchingDetails = false;
   const indices = new Map<string, Supercluster<any, any>>();
   let lastRevision = "";
-  const openPaths = new Set(["/api/health", "/api/config"]);
+  // The website's webhook proves itself with its signature, not a sign-in.
+  const openPaths = new Set([
+    "/api/health",
+    "/api/config",
+    "/api/webhooks/website",
+  ]);
   app.addHook("onRequest", async (req, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
     // The app is never meant to be embedded in another site.
@@ -166,12 +204,20 @@ export async function createApp(
     const user = token ? await tokens.verify(token) : null;
     if (!user) return reply.code(401).send({ error: "Sign in to continue." });
     const [enabled] =
-      await sql`SELECT 1 FROM app_users WHERE email=${user.email}`;
+      await sql`SELECT email, role, modules FROM app_users WHERE email=${user.email}`;
     if (!enabled)
       return reply
         .code(403)
         .send({ error: "This account is not enabled for Unit 50." });
-    signedIn.set(req, user);
+    const account = accountFrom(
+      enabled as unknown as { email: string; role: string; modules: string[] },
+    );
+    // Read on every request, so a change an admin makes applies at once.
+    if (!allowed(account, areaFor(req.method, path)))
+      return reply.code(403).send({
+        error: "Your account does not have access to this part of Unit 50.",
+      });
+    accounts.set(req, account);
   });
   app.setErrorHandler((error, _req, reply) => {
     const e = error as Error & { statusCode?: number; validation?: unknown };
@@ -189,9 +235,7 @@ export async function createApp(
   app.get("/api/config", async () => ({
     auth: auth ? { url: auth.url, key: auth.key } : null,
   }));
-  app.get("/api/me", async (req) => ({
-    email: signedIn.get(req)?.email ?? null,
-  }));
+  app.get("/api/me", async (req): Promise<Account> => who(req));
   // Called just before the browser ends its Supabase session, so the token is
   // refused from the very next request.
   app.post("/api/logout", async (req) => {
@@ -199,11 +243,14 @@ export async function createApp(
     if (token) tokens?.forget(token);
     return { ok: true };
   });
-  app.get("/api/summary", async (): Promise<Summary> => {
+  app.get("/api/summary", async (req): Promise<Summary> => {
+    // A rep's numbers are their own visits and follow-ups; an admin's are the team's.
+    const owner = ownerScope(who(req)),
+      mine = owner === undefined ? sql`TRUE` : sql`created_by=${owner}`;
     const [[row], [visited], [due], cities, latest] = await Promise.all([
       sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE (${prioritySql(sql)})='High')::int AS high, COUNT(*) FILTER (WHERE p.lng IS NOT NULL)::int AS mapped FROM properties p WHERE p.active`,
-      sql`SELECT COUNT(DISTINCT property_id)::int AS n FROM visits`,
-      sql`SELECT COUNT(*)::int AS n FROM follow_ups WHERE state='pending' AND due_date<=${utahToday()}`,
+      sql`SELECT COUNT(DISTINCT property_id)::int AS n FROM visits WHERE ${mine}`,
+      sql`SELECT COUNT(*)::int AS n FROM follow_ups WHERE state='pending' AND due_date<=${utahToday()} AND ${mine}`,
       sql`SELECT DISTINCT city FROM properties WHERE active AND city!='' ORDER BY city`,
       importRun(sql),
     ]);
@@ -243,7 +290,7 @@ export async function createApp(
   app.get<{ Params: { id: string } }>(
     "/api/properties/:id",
     { schema: { params: idParams } },
-    async (req) => detail(sql, req.params.id),
+    async (req) => detail(sql, req.params.id, who(req)),
   );
   app.get<{ Querystring: Filters & { zoom: number } }>(
     "/api/map",
@@ -326,7 +373,7 @@ export async function createApp(
     { schema: { params: idParams, body: object({ status }, ["status"]) } },
     async (req) => {
       await updateProspect(sql, req.params.id, req.body.status);
-      return detail(sql, req.params.id);
+      return detail(sql, req.params.id, who(req));
     },
   );
   app.post<{
@@ -366,14 +413,34 @@ export async function createApp(
         req.body.result,
         req.body.notes || "",
         when,
+        who(req).email,
       );
       return reply.code(201).send({ id });
     },
   );
-  app.get("/api/follow-ups", async () => ({
-    items: await followUps(sql),
-    today: utahToday(),
-  }));
+  // A rep's own follow-ups; an admin sees the whole team's, or only their own
+  // with ?who=me.
+  app.get<{ Querystring: { who?: "me" | "all" } }>(
+    "/api/follow-ups",
+    {
+      schema: {
+        querystring: object({ who: { type: "string", enum: ["me", "all"] } }),
+      },
+    },
+    async (req) => {
+      const account = who(req);
+      return {
+        items: await followUps(
+          sql,
+          undefined,
+          req.query.who === "me" && account.email
+            ? account.email
+            : ownerScope(account),
+        ),
+        today: utahToday(),
+      };
+    },
+  );
   app.post<{ Body: { propertyId: string; dueDate: string; notes?: string } }>(
     "/api/follow-ups",
     {
@@ -391,6 +458,7 @@ export async function createApp(
           req.body.propertyId,
           req.body.dueDate,
           req.body.notes || "",
+          who(req).email,
         ),
       }),
   );
@@ -420,7 +488,7 @@ export async function createApp(
       },
     },
     async (req) => {
-      await updateFollowUp(sql, req.params.id, req.body);
+      await updateFollowUp(sql, req.params.id, req.body, who(req));
       return { ok: true };
     },
   );
@@ -479,7 +547,7 @@ export async function createApp(
           await sql`SELECT error FROM county_details WHERE property_id=${req.params.id}`;
         throw new AppError(502, String(row?.error));
       }
-      return detail(sql, req.params.id);
+      return detail(sql, req.params.id, who(req));
     },
   );
   app.get("/api/county-details", async (): Promise<DetailsCoverage> => {
@@ -637,6 +705,164 @@ export async function createApp(
       await sql`DELETE FROM property_photos WHERE id=${req.params.photoId}`;
       return { ok: true };
     },
+  );
+  // Leads from the website. Its outbox sends each lead event as a JSON POST
+  // signed with the shared secret; the signature covers the exact bytes sent,
+  // so this route keeps the raw body.
+  await app.register(async (scope) => {
+    scope.addContentTypeParser(
+      "application/json",
+      { parseAs: "string" },
+      (req, body, done) => {
+        rawBodies.set(req, String(body));
+        try {
+          done(null, JSON.parse(String(body)));
+        } catch {
+          done(new AppError(400, "The request body is not valid JSON."));
+        }
+      },
+    );
+    scope.post("/api/webhooks/website", async (req, reply) => {
+      if (!webhookSecret)
+        throw new AppError(503, "Website leads are not set up on this server.");
+      const header = (name: string) => {
+        const value = req.headers[name];
+        return Array.isArray(value) ? value[0] : value;
+      };
+      if (
+        !verifyWebhook(
+          webhookSecret,
+          header("x-unit50-timestamp"),
+          header("x-unit50-signature"),
+          rawBodies.get(req) ?? "",
+        )
+      )
+        throw new AppError(401, "The signature does not match.");
+      const parsed = parseLeadEvent(req.body);
+      if ("ignored" in parsed)
+        return reply.code(202).send({ ok: true, ignored: parsed.ignored });
+      await saveLead(sql, parsed.lead);
+      return { ok: true };
+    });
+  });
+  // The lead board: the shared pool and the rep's own leads (all, for admins).
+  app.get("/api/leads", async (req) => {
+    const account = who(req);
+    return {
+      items: await listLeads(sql, account),
+      team:
+        account.role === "admin"
+          ? (await sql`SELECT email FROM app_users ORDER BY email`).map((r) =>
+              String(r.email),
+            )
+          : [],
+    };
+  });
+  app.patch<{
+    Params: { id: string };
+    Body: { stage?: LeadStage; notes?: string; owner?: string | null };
+  }>(
+    "/api/leads/:id",
+    {
+      schema: {
+        params: idParams,
+        body: {
+          ...object({
+            stage: { type: "string", enum: [...LEAD_STAGES] },
+            notes: str(5000),
+            owner: { type: ["string", "null"], maxLength: 254 },
+          }),
+          minProperties: 1,
+        },
+      },
+    },
+    async (req) => updateLead(sql, who(req), req.params.id, req.body),
+  );
+  // Team and access (admins only; the request hook enforces that).
+  const team = async (): Promise<TeamMember[]> =>
+    (
+      await sql`SELECT email, role, modules, created_at FROM app_users ORDER BY role, email`
+    ).map((r) => ({
+      ...accountFrom(
+        r as unknown as { email: string; role: string; modules: string[] },
+      ),
+      email: String(r.email),
+      createdAt: String(r.createdAt),
+    }));
+  app.get("/api/admin/users", async () => ({ items: await team() }));
+  app.post<{ Body: { email: string; role?: Role } }>(
+    "/api/admin/users",
+    {
+      schema: {
+        body: object({ email: str(254), role: roleSchema }, ["email"]),
+      },
+    },
+    async (req, reply) => {
+      const email = req.body.email.trim().toLowerCase();
+      if (!EMAIL.test(email))
+        throw new AppError(400, "Enter a valid email address.");
+      const [added] =
+        await sql`INSERT INTO app_users (email, role) VALUES (${email}, ${req.body.role ?? "rep"}) ON CONFLICT DO NOTHING RETURNING email`;
+      if (!added) throw new AppError(409, `${email} is already on the team.`);
+      return reply.code(201).send({ items: await team() });
+    },
+  );
+  // Changes are made under a lock, so two admins cannot demote each other at
+  // the same moment and leave the team with no admin.
+  async function changeMember(
+    actor: Account,
+    email: string,
+    change: { role?: Role; modules?: Module[]; remove?: boolean },
+  ) {
+    await sql.begin(async (tx) => {
+      const rows =
+        await tx`SELECT email, role FROM app_users WHERE role='admin' OR email=${email} FOR UPDATE`;
+      const target = rows.find((r) => r.email === email);
+      if (!target) throw new AppError(404, "That person is not on the team.");
+      if (email === actor.email && (change.remove || change.role))
+        throw new AppError(
+          409,
+          change.remove
+            ? "You cannot remove yourself. Ask another admin."
+            : "You cannot change your own role. Ask another admin.",
+        );
+      const admins = rows.filter((r) => r.role === "admin").length;
+      if (
+        target.role === "admin" &&
+        (change.remove || change.role === "rep") &&
+        admins <= 1
+      )
+        throw new AppError(409, "The team needs at least one admin.");
+      if (change.remove) await tx`DELETE FROM app_users WHERE email=${email}`;
+      else
+        await tx`UPDATE app_users SET role=${change.role ?? String(target.role)}, modules=${change.modules ? tx.array(change.modules) : tx`modules`} WHERE email=${email}`;
+    });
+    return { items: await team() };
+  }
+  app.patch<{
+    Params: { email: string };
+    Body: { role?: Role; modules?: Module[] };
+  }>(
+    "/api/admin/users/:email",
+    {
+      schema: {
+        params: emailParams,
+        body: {
+          ...object({ role: roleSchema, modules: modulesSchema }),
+          minProperties: 1,
+        },
+      },
+    },
+    async (req) =>
+      changeMember(who(req), req.params.email.toLowerCase(), req.body),
+  );
+  app.delete<{ Params: { email: string } }>(
+    "/api/admin/users/:email",
+    { schema: { params: emailParams } },
+    async (req) =>
+      changeMember(who(req), req.params.email.toLowerCase(), {
+        remove: true,
+      }),
   );
   const staticDir = options.staticDir || resolve("dist");
   if (existsSync(staticDir)) {

@@ -26,3 +26,6 @@ services:
         sync: false
       - key: CLOUDINARY_FOLDER
         value: unit50-uploads
+      # Shared with the website (unit50-studio) as its WEBHOOK_SECRET.
+      - key: LEADS_WEBHOOK_SECRET
+        sync: false

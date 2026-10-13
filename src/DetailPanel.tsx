@@ -61,14 +61,19 @@ export function dateLabel(value: string) {
     timeZone: "UTC",
   }).format(new Date(value + "T12:00:00Z"));
 }
+// The name part of a sign-in email, to say who did something.
+export const who = (email: string | null) => (email ? email.split("@")[0] : "");
 export function TaskRow({
   task,
   onChange,
   onOpen,
+  showOwner = false,
 }: {
   task: FollowUp;
   onChange: () => void;
   onOpen?: (id: string) => void;
+  // On the team view, say whose follow-up it is.
+  showOwner?: boolean;
 }) {
   const [editing, setEditing] = useState(false),
     [date, setDate] = useState(task.dueDate),
@@ -115,6 +120,12 @@ export function TaskRow({
                 ? "Due today"
                 : "Upcoming"
             : task.state}
+          {showOwner && (
+            <span title={task.createdBy || undefined}>
+              {" · "}
+              {task.createdBy ? who(task.createdBy) : "no owner"}
+            </span>
+          )}
         </span>
       </div>
       {task.state === "pending" && (
@@ -399,7 +410,12 @@ export default function DetailPanel({
                   <span className="activity-point" />
                   <div>
                     <strong>{v.result}</strong>
-                    <time>{eventTime(v.occurredAt)} · Utah</time>
+                    <time>
+                      {eventTime(v.occurredAt)} · Utah
+                      {v.createdBy && (
+                        <span title={v.createdBy}> · {who(v.createdBy)}</span>
+                      )}
+                    </time>
                     {v.notes && <p>{v.notes}</p>}
                   </div>
                 </article>

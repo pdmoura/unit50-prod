@@ -1,8 +1,11 @@
 // Lets a person use Unit 50, or takes that away. Signing in is handled by
 // Supabase Auth (create the account in the Supabase dashboard: Authentication >
 // Users > Add user, with "Auto Confirm User" ticked); this decides who gets in.
+// Admins can do the same, and choose each rep's modules, under Team & access.
 //
-//   npx tsx scripts/allow-user.ts <email>            production (DATABASE_URL)
+//   npx tsx scripts/allow-user.ts <email>            production (DATABASE_URL), as a rep
+//   npx tsx scripts/allow-user.ts <email> --admin    as an admin (or makes them one)
+//   npx tsx scripts/allow-user.ts <email> --rep      makes an admin a rep again
 //   npx tsx scripts/allow-user.ts <email> --dev      local database (DATABASE_URL_DEV)
 //   npx tsx scripts/allow-user.ts <email> --remove
 //   npx tsx scripts/allow-user.ts --list
@@ -17,6 +20,11 @@ import {
 if (existsSync(".env")) process.loadEnvFile(".env");
 const args = process.argv.slice(2),
   email = args.find((a) => !a.startsWith("--"))?.toLowerCase(),
+  role = args.includes("--admin")
+    ? "admin"
+    : args.includes("--rep")
+      ? "rep"
+      : null,
   url = databaseUrl(),
   sql = openDb(url);
 try {
@@ -31,13 +39,14 @@ try {
       removed.length ? `Removed ${email}.` : `${email} was not enabled.`,
     );
   } else if (email) {
-    await sql`INSERT INTO app_users (email) VALUES (${email}) ON CONFLICT DO NOTHING`;
+    await sql`INSERT INTO app_users (email, role) VALUES (${email}, ${role ?? "rep"}) ON CONFLICT (email) DO UPDATE SET role=COALESCE(${role}, app_users.role)`;
     console.log(`${email} can use Unit 50 once they have a Supabase login.`);
   } else if (!args.includes("--list"))
     throw new Error("Give an email address, or --list.");
-  const people = await sql`SELECT email FROM app_users ORDER BY email`;
+  const people =
+    await sql`SELECT email, role FROM app_users ORDER BY role, email`;
   console.log(
-    `Enabled (${people.length}): ${people.map((p) => p.email).join(", ") || "nobody"}`,
+    `Enabled (${people.length}): ${people.map((p) => `${p.email} (${p.role})`).join(", ") || "nobody"}`,
   );
 } catch (error) {
   console.error(`Failed: ${(error as Error).message}`);

@@ -21,6 +21,8 @@ import {
   PanelLeftClose,
   LogOut,
   ChevronsUpDown,
+  SquareKanban,
+  ShieldCheck,
 } from "lucide-react";
 import type {
   Filters,
@@ -38,8 +40,61 @@ import DetailPanel, { Badge, TaskRow, eventTime } from "./DetailPanel";
 import { useAccount } from "./AuthGate";
 import { LogoFull, LogoMark } from "./Logo";
 import ConfirmDialog from "./ConfirmDialog";
+import LeadsView from "./LeadsView";
+import AdminView from "./AdminView";
 const format = new Intl.NumberFormat("en-US");
-type View = "map" | "follow-ups" | "data";
+type View = "map" | "follow-ups" | "leads" | "data" | "admin";
+// The pages in the sidebar, in order. Each module an admin can turn on or off
+// is one page; the admin panel is there for admins only.
+const PAGES: {
+  view: View;
+  label: string;
+  icon: React.ReactNode;
+  eyebrow: string;
+  title: string;
+  text: string;
+}[] = [
+  {
+    view: "map",
+    label: "Prospecting map",
+    icon: <Map size={20} />,
+    eyebrow: "MAKE EVERY DOOR COUNT",
+    title: "Your next opportunity, mapped.",
+    text: "Discover homes, plan your outreach, and build lasting connections.",
+  },
+  {
+    view: "follow-ups",
+    label: "Follow-ups",
+    icon: <CalendarDays size={20} />,
+    eyebrow: "KEEP THE CONVERSATION GOING",
+    title: "A little follow-through goes far.",
+    text: "The right conversation, at the right time. All your next steps in one place.",
+  },
+  {
+    view: "leads",
+    label: "Leads",
+    icon: <SquareKanban size={20} />,
+    eyebrow: "FROM THE WEBSITE TO THE DOOR",
+    title: "Every lead, one clear next step.",
+    text: "Homeowners who designed their exterior on the website, ready for a conversation.",
+  },
+  {
+    view: "data",
+    label: "Data & imports",
+    icon: <Database size={20} />,
+    eyebrow: "A RELIABLE STARTING POINT",
+    title: "Good data. Better direction.",
+    text: "Real county records, with clear origins and a careful refresh.",
+  },
+  {
+    view: "admin",
+    label: "Team & access",
+    icon: <ShieldCheck size={20} />,
+    eyebrow: "THE RIGHT TOOLS FOR EVERY REP",
+    title: "Your team, your rules.",
+    text: "Choose who can sign in and which parts of Unit 50 each person uses.",
+  },
+];
 const emptySummary: Summary = {
   total: 0,
   high: 0,
@@ -53,8 +108,23 @@ const emptySummary: Summary = {
 };
 export default function App() {
   const account = useAccount();
-  const [view, setView] = useState<View>(
-      (location.hash.slice(1) as View) || "map",
+  // The pages this person may open; the server enforces the same rules.
+  const pages = useMemo(
+    () =>
+      PAGES.filter((p) =>
+        p.view === "admin"
+          ? account.role === "admin"
+          : account.modules.includes(p.view),
+      ),
+    [account.role, account.modules],
+  );
+  const pick = useCallback(
+    (wanted: string) =>
+      (pages.find((p) => p.view === wanted) || pages[0])?.view ?? null,
+    [pages],
+  );
+  const [view, setView] = useState<View | null>(() =>
+      pick(location.hash.slice(1)),
     ),
     [summary, setSummary] = useState<Summary>(emptySummary),
     [version, setVersion] = useState(0),
@@ -100,12 +170,17 @@ export default function App() {
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
   useEffect(() => {
     const cb = () => {
-      const v = location.hash.slice(1);
-      setView(v === "data" || v === "follow-ups" ? v : "map");
+      const next = pick(location.hash.slice(1));
+      setView(next);
+      // A page this person cannot open: the address shows where they landed.
+      if (next && location.hash.slice(1) !== next)
+        history.replaceState(null, "", `#${next}`);
     };
+    cb();
     window.addEventListener("hashchange", cb);
     return () => window.removeEventListener("hashchange", cb);
-  }, []);
+  }, [pick]);
+  const current = PAGES.find((p) => p.view === view);
   useEffect(() => {
     const t = setTimeout(() => {
       setFilters((f) => ({ ...f, q: search }));
@@ -189,7 +264,9 @@ export default function App() {
     setFilters((f) => ({ ...f, [key]: value }));
     setPage(1);
   }
-  function navigate(next: View) {
+  function navigate(wanted: View) {
+    const next = pick(wanted);
+    if (!next) return;
     location.hash = next;
     setView(next);
     close();
@@ -199,8 +276,8 @@ export default function App() {
       <aside className="sidebar">
         <a
           className="brand"
-          href="#map"
-          onClick={() => navigate("map")}
+          href={`#${pages[0]?.view ?? ""}`}
+          onClick={() => pages[0] && navigate(pages[0].view)}
           aria-label="Unit 50 home"
         >
           <LogoFull className="brand-full" />
@@ -208,34 +285,24 @@ export default function App() {
         </a>
         <div className="sidebar-section">WORKSPACE</div>
         <nav>
-          <a
-            href="#map"
-            className={view === "map" ? "active" : ""}
-            onClick={() => navigate("map")}
-          >
-            <Map size={20} />
-            Prospecting map
-            <ArrowUpRight size={15} className="nav-end" />
-          </a>
-          <a
-            href="#follow-ups"
-            className={view === "follow-ups" ? "active" : ""}
-            onClick={() => navigate("follow-ups")}
-          >
-            <CalendarDays size={20} />
-            Follow-ups
-            {summary.due > 0 && (
-              <span className="nav-count">{summary.due}</span>
-            )}
-          </a>
-          <a
-            href="#data"
-            className={view === "data" ? "active" : ""}
-            onClick={() => navigate("data")}
-          >
-            <Database size={20} />
-            Data & imports
-          </a>
+          {pages.map((p) => (
+            <a
+              key={p.view}
+              href={`#${p.view}`}
+              className={view === p.view ? "active" : ""}
+              title={p.label}
+              onClick={() => navigate(p.view)}
+            >
+              {p.icon}
+              {p.label}
+              {p.view === "map" && (
+                <ArrowUpRight size={15} className="nav-end" />
+              )}
+              {p.view === "follow-ups" && summary.due > 0 && (
+                <span className="nav-count">{summary.due}</span>
+              )}
+            </a>
+          ))}
         </nav>
         <div className="territory-card">
           <span className="eyebrow">YOUR TERRITORY</span>
@@ -319,13 +386,7 @@ export default function App() {
           <div>
             <span className="breadcrumb">Workspace</span>
             <span className="slash">/</span>
-            <span>
-              {view === "map"
-                ? "Prospecting map"
-                : view === "data"
-                  ? "Data & imports"
-                  : "Follow-ups"}
-            </span>
+            <span>{current?.label ?? "No access"}</span>
           </div>
           {!account.signOut && (
             <span className="local-pill">
@@ -336,29 +397,14 @@ export default function App() {
         </header>
         <div className="page-heading">
           <div>
-            <span className="eyebrow">
-              {view === "map"
-                ? "MAKE EVERY DOOR COUNT"
-                : view === "data"
-                  ? "A RELIABLE STARTING POINT"
-                  : "KEEP THE CONVERSATION GOING"}
-            </span>
-            <h1>
-              {view === "map"
-                ? "Your next opportunity, mapped."
-                : view === "data"
-                  ? "Good data. Better direction."
-                  : "A little follow-through goes far."}
-            </h1>
+            <span className="eyebrow">{current?.eyebrow ?? "ACCESS"}</span>
+            <h1>{current?.title ?? "Nothing is turned on yet."}</h1>
             <p>
-              {view === "map"
-                ? "Discover homes, plan your outreach, and build lasting connections."
-                : view === "data"
-                  ? "Real county records, with clear origins and a careful refresh."
-                  : "The right conversation, at the right time. All your next steps in one place."}
+              {current?.text ??
+                "Your account has no modules turned on. Ask an admin to give you access."}
             </p>
           </div>
-          {view === "map" && (
+          {view === "map" && pages.some((p) => p.view === "follow-ups") && (
             <button
               className="secondary-button header-action"
               onClick={() => navigate("follow-ups")}
@@ -652,15 +698,24 @@ export default function App() {
             </div>
           </>
         ) : view === "follow-ups" ? (
-          <FollowUpView version={version} onChange={changed} onOpen={select} />
-        ) : (
+          <FollowUpView
+            version={version}
+            onChange={changed}
+            onOpen={select}
+            team={account.role === "admin" && Boolean(account.email)}
+          />
+        ) : view === "leads" ? (
+          <LeadsView version={version} onOpenProperty={select} />
+        ) : view === "admin" ? (
+          <AdminView />
+        ) : view === "data" ? (
           <DataView
             summary={summary}
             version={version}
             onChange={refresh}
             onOpen={select}
           />
-        )}
+        ) : null}
         {!ready && !error && (
           <div className="loading-line" role="status">
             Connecting to your local workspace…
@@ -721,21 +776,28 @@ function Stat({
     </div>
   );
 }
+// A rep's own follow-ups. An admin (team) sees everyone's, with whose each one
+// is, and can narrow it down to their own.
 function FollowUpView({
   version,
   onChange,
   onOpen,
+  team,
 }: {
   version: number;
   onChange: () => void;
   onOpen: (id: string) => void;
+  team: boolean;
 }) {
   const [items, setItems] = useState<FollowUp[]>([]),
     [error, setError] = useState(""),
-    [history, setHistory] = useState(false);
+    [history, setHistory] = useState(false),
+    [onlyMine, setOnlyMine] = useState(false);
   useEffect(() => {
     let live = true;
-    api<{ items: FollowUp[] }>("/follow-ups")
+    api<{ items: FollowUp[] }>(
+      `/follow-ups${team && onlyMine ? "?who=me" : ""}`,
+    )
       .then((d) => {
         if (live) {
           setItems(d.items);
@@ -746,7 +808,7 @@ function FollowUpView({
     return () => {
       live = false;
     };
-  }, [version]);
+  }, [version, team, onlyMine]);
   const today = utahToday(),
     groups = history
       ? [
@@ -793,7 +855,24 @@ function FollowUpView({
             History
           </button>
         </div>
-        <span className="muted small">Calendar dates · Utah</span>
+        {team ? (
+          <div className="segmented">
+            <button
+              className={!onlyMine ? "selected" : ""}
+              onClick={() => setOnlyMine(false)}
+            >
+              Everyone
+            </button>
+            <button
+              className={onlyMine ? "selected" : ""}
+              onClick={() => setOnlyMine(true)}
+            >
+              Mine
+            </button>
+          </div>
+        ) : (
+          <span className="muted small">Calendar dates · Utah</span>
+        )}
       </div>
       {error && (
         <div className="form-error" role="alert">
@@ -837,6 +916,7 @@ function FollowUpView({
                   task={t}
                   onChange={onChange}
                   onOpen={onOpen}
+                  showOwner={team && !onlyMine}
                 />
               ))}
             </section>

@@ -188,4 +188,48 @@ ALTER TABLE properties ADD COLUMN street_view_status text CHECK (street_view_sta
 ALTER TABLE properties ADD COLUMN street_view_pano text;
 `,
   },
+  {
+    version: 7,
+    sql: `
+-- Roles and module access. An admin uses every module and manages the team; a
+-- rep uses the modules listed (all of them unless an admin turns some off).
+ALTER TABLE app_users ADD COLUMN role text NOT NULL DEFAULT 'rep' CHECK (role IN ('admin', 'rep'));
+ALTER TABLE app_users ADD COLUMN modules text[] NOT NULL DEFAULT ARRAY['map', 'follow-ups', 'leads', 'data']
+  CHECK (modules <@ ARRAY['map', 'follow-ups', 'leads', 'data']);
+
+-- Who logged a visit or scheduled a follow-up (sign-in email). NULL for rows
+-- from before sign-in, and when sign-in is off.
+ALTER TABLE visits ADD COLUMN created_by text;
+ALTER TABLE follow_ups ADD COLUMN created_by text;
+CREATE INDEX follow_ups_owner ON follow_ups (created_by, state, due_date);
+
+-- Homeowners who left their phone number on the website (unit50-studio),
+-- delivered by its signed webhook. owner is the rep working the lead; NULL
+-- means it is in the shared pool. Removing a person returns their leads there.
+CREATE TABLE leads (
+  id text PRIMARY KEY,                  -- the website's lead ID
+  name text,
+  phone text NOT NULL,
+  address text NOT NULL,
+  lat double precision,
+  lng double precision,
+  property_id text REFERENCES properties (id),
+  contact_permission boolean,           -- NULL: the website did not say
+  follow_up_requested_at timestamptz,
+  change text,                          -- siding, windows or both
+  collection text,
+  photo_url text,
+  design_url text,
+  stage text NOT NULL DEFAULT 'new' CHECK (stage IN ('new', 'contacted', 'appointment', 'estimate', 'won', 'lost')),
+  owner text REFERENCES app_users (email) ON DELETE SET NULL,
+  notes text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL,      -- when the homeowner left it on the website
+  last_event_at timestamptz NOT NULL,   -- the newest website event applied
+  received_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL
+);
+CREATE INDEX leads_board ON leads (owner, stage);
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+`,
+  },
 ];

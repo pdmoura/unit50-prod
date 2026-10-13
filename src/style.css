@@ -2596,3 +2596,458 @@ button.is-busy:disabled {
   margin-top: 6px;
   padding: 14px 15px;
 }
+/* Lead board: the shared pool, then the pipeline stages, side by side. On a
+   narrow screen the columns scroll sideways and snap one at a time. */
+.leads-section {
+  min-height: 0;
+}
+.leads-toolbar {
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.leads-toolbar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.leads-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3d31;
+}
+.lead-person select {
+  min-width: 220px;
+}
+.lead-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.lead-column {
+  background: #f5f7f1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 360px;
+  scroll-snap-align: start;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.lead-column.pool {
+  background: #eef4e4;
+  border-color: #d3e0c4;
+}
+.lead-column.drop-target {
+  background: #e3eed5;
+  border-color: #7c9a6a;
+}
+.lead-column h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3d5440;
+  padding: 2px 4px 10px;
+}
+.lead-column h3 span {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: #7d8b70;
+  background: #fff;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.lead-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lead-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 12px;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s,
+    opacity 0.15s;
+}
+.lead-card[draggable="true"] {
+  cursor: grab;
+}
+.lead-card:hover {
+  border-color: #a6b79b;
+  box-shadow: 0 3px 8px #29442010;
+}
+.lead-card:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+.lead-card.dragging {
+  opacity: 0.45;
+}
+.lead-card strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #23352d;
+}
+.lead-address {
+  font-size: 11px;
+  color: #6f7a6c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lead-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.lead-tags:empty {
+  display: none;
+}
+.lead-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  background: #ecefe9;
+  color: #5f6c5c;
+}
+.lead-tag.asked {
+  background: #e2efd8;
+  color: #2f5d33;
+}
+.lead-tag.no-contact {
+  background: #fbeee2;
+  color: #8a4b12;
+}
+.lead-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: #8a9483;
+}
+.lead-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #5f6c5c;
+}
+.lead-empty {
+  font-size: 11px;
+  color: #a0a99a;
+  text-align: center;
+  padding: 18px 0;
+  margin: 0;
+  border: 1px dashed #d8ded2;
+  border-radius: 8px;
+}
+.lead-consent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.consent svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.consent.ok {
+  background: #eef5e7;
+  color: #2f5d33;
+}
+.consent.warn {
+  background: #fbeee2;
+  color: #8a4b12;
+}
+.consent.unknown {
+  background: #f1f3ee;
+  color: #6f7a6c;
+}
+.lead-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.lead-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: #5f6c5c;
+  flex: 1 1 150px;
+}
+.lead-interest {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+.lead-pictures {
+  grid-template-columns: repeat(2, 1fr);
+}
+.lead-pictures figcaption {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  background: #ffffffe6;
+  color: #3d5440;
+}
+.lead-property {
+  margin: 4px 0 6px;
+}
+.lead-notes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.lead-notes textarea {
+  width: 100%;
+  resize: vertical;
+  line-height: 1.5;
+}
+@media (max-width: 650px) {
+  .lead-board {
+    grid-auto-columns: 82%;
+    margin: 0 -12px;
+    padding: 0 12px 8px;
+    scroll-snap-type: x mandatory;
+  }
+  .lead-person,
+  .lead-person select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Team and access: one row per person, one switch per module. On a narrow
+   screen each person becomes a card with the switches listed under the name. */
+.admin-section {
+  min-height: 0;
+}
+.team-add {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 24px;
+  padding-bottom: 22px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.team-add h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.team-add p {
+  max-width: 460px;
+  margin: 4px 0 0;
+}
+.team-add-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+.team-add-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: #5f6c5c;
+}
+.team-add-fields input {
+  width: 260px;
+}
+.team-title {
+  margin-top: 18px;
+}
+.team-table {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.team-row {
+  display: grid;
+  grid-template-columns:
+    minmax(200px, 2fr) 110px repeat(4, minmax(90px, 1fr))
+    44px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  transition: opacity 0.15s;
+}
+.team-row.saving {
+  opacity: 0.6;
+}
+.team-head {
+  border-top: 0;
+  background: #f5f7f1;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #6f7a6c;
+}
+.team-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.team-person .workspace-avatar {
+  flex-shrink: 0;
+  color: #f2f6e8;
+}
+.team-person > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.team-person strong {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.team-role select {
+  width: 100%;
+}
+.team-remove {
+  display: flex;
+  justify-content: flex-end;
+}
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.switch > span[aria-hidden] {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  background: #d5dbd0;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.switch > span[aria-hidden]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px #1d2b2333;
+  transition: transform 0.15s;
+}
+.switch input:checked + span[aria-hidden] {
+  background: var(--green);
+}
+.switch input:checked + span[aria-hidden]::after {
+  transform: translateX(14px);
+}
+.switch input:focus-visible + span[aria-hidden] {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.switch input:disabled + span[aria-hidden] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+/* The module name sits beside the switch only where there is no column header. */
+.switch-label {
+  display: none;
+  font-size: 12px;
+  color: #3d5440;
+}
+.team-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+@media (max-width: 900px) {
+  .team-head {
+    display: none;
+  }
+  .team-row {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 14px;
+  }
+  .team-role {
+    grid-column: 1;
+  }
+  .team-remove {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .team-module {
+    grid-column: 1 / -1;
+  }
+  .switch-label {
+    display: inline;
+  }
+  .team-add-fields,
+  .team-add-fields label,
+  .team-add-fields input {
+    width: 100%;
+  }
+}
+/* The call button keeps its white text inside the panel links row. */
+.detail-links a.primary-button {
+  color: #fff;
+}
+.lead-person select,
+.team-role select,
+.lead-controls select {
+  font-size: 12px;
+  padding: 9px 11px;
+}

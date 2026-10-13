@@ -108,7 +108,24 @@ Com `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` definidos, o aplicativo exige lo
 Para liberar uma pessoa:
 
 1. No painel do Supabase: **Authentication → Users → Add user → Create new user**, com email, senha e **Auto Confirm User** marcado.
-2. Na pasta do projeto: `npx tsx scripts/allow-user.ts pessoa@empresa.com` (acrescente `--dev` para o banco local, `--remove` para retirar o acesso, `--list` para ver quem está liberado).
+2. Em **Team & access** (só para admins), adicione o email e escolha o papel. Ou, na pasta do projeto: `npx tsx scripts/allow-user.ts pessoa@empresa.com` (acrescente `--admin` para admin, `--dev` para o banco local, `--remove` para retirar o acesso, `--list` para ver quem está liberado).
+
+### Papéis e módulos
+
+- **Admin**: usa todos os módulos e o painel **Team & access**, onde adiciona e remove pessoas, muda o papel e liga ou desliga, por pessoa, cada módulo: **Prospecting map**, **Follow-ups**, **Leads** e **Data & imports**. Um admin não pode remover a si mesmo nem mudar o próprio papel, e o time sempre fica com pelo menos um admin.
+- **Rep**: começa com todos os módulos ligados. O servidor confere o acesso em cada chamada, então uma mudança vale no clique seguinte da pessoa. A ficha do imóvel abre a partir do mapa, dos follow-ups e dos leads, então fica disponível com qualquer um desses três módulos.
+- Cada visita e cada follow-up guardam o email de quem registrou (`created_by`). O rep vê e altera só os próprios follow-ups (na página Follow-ups, na ficha e nos contadores); o histórico de visitas do imóvel é do time inteiro e mostra quem bateu. O admin vê os follow-ups de todos, com **Everyone / Mine**. Registros anteriores ao login não têm autor e aparecem só para admins.
+- Sem login (modo local), a pessoa no computador é tratada como admin.
+
+## Leads do site (unit50-studio)
+
+O site envia cada lead novo e cada pedido de acompanhamento como um POST assinado para `/api/webhooks/website` (cabeçalhos `X-Unit50-Timestamp` e `X-Unit50-Signature`, HMAC-SHA256 de `<timestamp>.<corpo>` com o segredo compartilhado). O servidor recusa assinaturas erradas e envios com mais de 5 minutos de diferença no relógio, e grava o lead em `leads`. Entregas repetidas ou fora de ordem só completam o lead, nunca apagam dados. Envios de candidaturas (careers) são aceitos e ignorados.
+
+- Configure `LEADS_WEBHOOK_SECRET` aqui e o mesmo valor como `WEBHOOK_SECRET` no site, com `WEBHOOK_URL=https://unit50.onrender.com/api/webhooks/website`. Sem o segredo, o endpoint responde 503 e o site guarda os leads na fila dele até a configuração existir.
+- O endereço do lead é ligado à parcela do condado quando não há dúvida: mesmo número e rua perto do ponto do mapa, ou a única parcela a até 25 m do ponto. Sem isso, o lead fica sem parcela.
+- Só links de imagem do Cloudinary (`res.cloudinary.com`) são guardados; qualquer outro é descartado.
+- **Quadro de leads**: colunas **Unassigned** (fila do time), **New**, **Contacted**, **Appointment set**, **Estimate sent**, **Won** e **Lost**. O rep vê a fila e os próprios leads; mover um lead da fila (arrastando no computador ou pelo campo Stage na ficha) faz dele o responsável, e ele pode devolver o lead à fila. Dois reps nunca ficam com o mesmo lead. O admin vê todos, filtra por pessoa e atribui a qualquer um do time. Remover uma pessoa devolve os leads dela para a fila.
+- A ficha do lead mostra telefone (ligar ou mandar mensagem), se a pessoa pediu acompanhamento, se marcou "OK to contact me" no site, o interesse (siding, windows), a foto e o desenho do estúdio, e o link para a parcela no mapa.
 
 Sem essas duas variáveis o aplicativo roda sem login e aceita conexões apenas da própria máquina; o servidor se recusa a iniciar num endereço público nessa condição.
 

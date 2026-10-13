@@ -14,6 +14,7 @@ import {
   type Visit,
   type ImportRun,
   type ProspectStatus,
+  type Account,
 } from "../shared/types.js";
 import { MIGRATIONS } from "./migrations.js";
 
@@ -170,13 +171,19 @@ export async function listProperties(
     pageSize,
   };
 }
-export async function detail(sql: Db, id: string): Promise<PropertyDetail> {
+// Everyone sees a property's visit history (who knocked, and when); a rep sees
+// only the follow-ups they scheduled there.
+export async function detail(
+  sql: Db,
+  id: string,
+  account?: Account,
+): Promise<PropertyDetail> {
   const [raw] = await sql`${baseSelect(sql)} WHERE p.id=${id}`;
   if (!raw) throw new AppError(404, "Property not found.");
   const [geometries, visits, tasks, county, pictures] = await Promise.all([
     sql`SELECT geojson FROM geometries WHERE property_id=${id} AND geojson IS NOT NULL ORDER BY source_id`,
     sql`SELECT * FROM visits WHERE property_id=${id} ORDER BY occurred_at DESC`,
-    followUps(sql, id),
+    followUps(sql, id, ownerScope(account)),
     countyDetails(sql, id),
     photos(sql, id),
   ]);
@@ -249,11 +256,12 @@ export async function addVisit(
   result: ProspectStatus,
   notes: string,
   occurredAt = new Date().toISOString(),
+  createdBy: string | null = null,
 ) {
   const id = randomUUID();
   await sql.begin(async (tx) => {
     await requireProperty(tx as unknown as Db, propertyId, true);
-    await tx`INSERT INTO visits VALUES (${id}, ${propertyId}, ${occurredAt}, ${result}, ${notes.trim()})`;
+    await tx`INSERT INTO visits VALUES (${id}, ${propertyId}, ${occurredAt}, ${result}, ${notes.trim()}, ${createdBy})`;
     await setStatus(tx as unknown as Db, propertyId, result);
   });
   return id;
@@ -267,17 +275,29 @@ export function validDate(date: string) {
     new Date(date).toISOString().slice(0, 10) === date
   );
 }
+// Whose follow-ups someone sees: a rep only their own; an admin (and the
+// single-user local mode) everyone's.
+export function ownerScope(account?: Account) {
+  return account && account.role !== "admin" ? account.email : undefined;
+}
+// owner: undefined lists everyone's follow-ups; an email lists only theirs.
 export async function followUps(
   sql: Db,
   propertyId?: string,
+  owner?: string | null,
 ): Promise<FollowUp[]> {
-  return (await sql`SELECT f.*, p.address, p.city FROM follow_ups f JOIN properties p ON p.id=f.property_id ${propertyId ? sql`WHERE f.property_id=${propertyId}` : sql``} ORDER BY f.due_date, f.created_at`) as unknown as FollowUp[];
+  const where = [
+    propertyId ? sql`f.property_id=${propertyId}` : sql`TRUE`,
+    owner !== undefined ? sql`f.created_by=${owner}` : sql`TRUE`,
+  ];
+  return (await sql`SELECT f.*, p.address, p.city FROM follow_ups f JOIN properties p ON p.id=f.property_id WHERE ${where[0]} AND ${where[1]} ORDER BY f.due_date, f.created_at`) as unknown as FollowUp[];
 }
 export async function addFollowUp(
   sql: Db,
   propertyId: string,
   dueDate: string,
   notes: string,
+  createdBy: string | null = null,
 ) {
   if (!validDate(dueDate))
     throw new AppError(400, "Enter a valid calendar date.");
@@ -285,7 +305,7 @@ export async function addFollowUp(
     now = new Date().toISOString();
   await sql.begin(async (tx) => {
     await requireProperty(tx as unknown as Db, propertyId, true);
-    await tx`INSERT INTO follow_ups VALUES (${id}, ${propertyId}, ${dueDate}, 'pending', ${notes.trim()}, ${now}, ${now})`;
+    await tx`INSERT INTO follow_ups VALUES (${id}, ${propertyId}, ${dueDate}, 'pending', ${notes.trim()}, ${now}, ${now}, ${createdBy})`;
   });
   return id;
 }
@@ -297,11 +317,15 @@ export async function updateFollowUp(
     state?: "pending" | "completed" | "cancelled";
     notes?: string;
   },
+  account?: Account,
 ) {
   await sql.begin(async (tx) => {
     const [row] =
       (await tx`SELECT * FROM follow_ups WHERE id=${id} FOR UPDATE`) as unknown as FollowUp[];
-    if (!row) throw new AppError(404, "Follow-up not found.");
+    // A rep cannot see, so cannot change, someone else's follow-up.
+    const owner = ownerScope(account);
+    if (!row || (owner !== undefined && row.createdBy !== owner))
+      throw new AppError(404, "Follow-up not found.");
     const state = update.state || row.state,
       dueDate = update.dueDate || row.dueDate;
     if (!validDate(dueDate))

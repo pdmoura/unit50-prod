@@ -97,6 +97,8 @@ export interface Visit {
   occurredAt: string;
   result: ProspectStatus;
   notes: string;
+  // Sign-in email of whoever logged it; null for visits from before sign-in.
+  createdBy: string | null;
 }
 export interface FollowUp {
   id: string;
@@ -108,6 +110,8 @@ export interface FollowUp {
   updatedAt: string;
   address: string;
   city: string;
+  // Sign-in email of whoever scheduled it; null from before sign-in.
+  createdBy: string | null;
 }
 export interface PropertyDetail extends Property {
   geometries: Feature<Geometry>[];
@@ -240,6 +244,72 @@ export interface Summary {
   latest: ImportRun | null;
   today: string;
   photosEnabled: boolean;
+}
+// The parts of Unit 50 an admin can turn on or off for each person. Admins
+// always have all of them, plus the admin panel.
+export const MODULES = ["map", "follow-ups", "leads", "data"] as const;
+export type Module = (typeof MODULES)[number];
+export const MODULE_LABELS: Record<Module, string> = {
+  map: "Prospecting map",
+  "follow-ups": "Follow-ups",
+  leads: "Leads",
+  data: "Data & imports",
+};
+export type Role = "admin" | "rep";
+// Who is using the app and what they may open. email is null when sign-in is
+// off (the single-user local mode, which acts as an admin).
+export interface Account {
+  email: string | null;
+  role: Role;
+  modules: Module[];
+}
+export interface TeamMember {
+  email: string;
+  role: Role;
+  modules: Module[];
+  createdAt: string;
+}
+// The pipeline a website lead moves through. A lead with no owner sits in the
+// shared pool until a rep takes it.
+export const LEAD_STAGES = [
+  "new",
+  "contacted",
+  "appointment",
+  "estimate",
+  "won",
+  "lost",
+] as const;
+export type LeadStage = (typeof LEAD_STAGES)[number];
+export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
+  new: "New",
+  contacted: "Contacted",
+  appointment: "Appointment set",
+  estimate: "Estimate sent",
+  won: "Won",
+  lost: "Lost",
+};
+export interface Lead {
+  id: string;
+  name: string | null;
+  phone: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  // The county parcel the address was matched to, when the match is clear.
+  propertyId: string | null;
+  // Whether the homeowner ticked "OK to contact me"; null when the website did not say.
+  contactPermission: boolean | null;
+  // When the homeowner asked for a specialist to follow up.
+  followUpRequestedAt: string | null;
+  change: string | null;
+  collection: string | null;
+  photoUrl: string | null;
+  designUrl: string | null;
+  stage: LeadStage;
+  owner: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface PropertyPage {
   items: Property[];

@@ -5,12 +5,15 @@ import { LogoFull, LogoSpinner } from "./Logo";
 import { initAuth, signOut } from "./auth";
 import { api } from "./api";
 import { hideSplash } from "./splash";
+import { MODULES, type Account as Person } from "../shared/types";
 
-// Who is signed in, for the app shell. email is null when sign-in is off.
-const Account = createContext<{
-  email: string | null;
-  signOut: (() => void) | null;
-}>({ email: null, signOut: null });
+// Who is signed in and what they may open, for the app shell. Without sign-in
+// (the single-user local mode) the person is an admin with every module.
+const LOCAL: Person = { email: null, role: "admin", modules: [...MODULES] };
+const Account = createContext<Person & { signOut: (() => void) | null }>({
+  ...LOCAL,
+  signOut: null,
+});
 export const useAccount = () => useContext(Account);
 
 type State =
@@ -18,7 +21,7 @@ type State =
   | { step: "failed"; message: string }
   | { step: "open" }
   | { step: "signed-out"; message?: string; attempt?: number }
-  | { step: "signed-in"; email: string };
+  | { step: "signed-in"; account: Person };
 
 // Shows the app only to a signed-in person whose account is enabled for Unit 50.
 export default function AuthGate({ children }: { children: React.ReactNode }) {
@@ -29,8 +32,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     // The server has the final say: a valid sign-in is not enough on its own.
     async function admit() {
       try {
-        const me = await api<{ email: string }>("/me");
-        if (live) setState({ step: "signed-in", email: me.email });
+        const me = await api<Person>("/me");
+        if (live) setState({ step: "signed-in", account: me });
       } catch (e) {
         await signOut();
         // A new attempt number remounts the form, so it shows this message.
@@ -97,7 +100,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   return (
     <Account.Provider
       value={{
-        email: state.step === "signed-in" ? state.email : null,
+        ...(state.step === "signed-in" ? state.account : LOCAL),
         signOut: client ? () => void signOut() : null,
       }}
     >
