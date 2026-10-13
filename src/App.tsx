@@ -23,6 +23,7 @@ import {
   ChevronsUpDown,
   SquareKanban,
   ShieldCheck,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import type {
   Filters,
@@ -32,6 +33,7 @@ import type {
   FollowUp,
   ImportRun,
   DetailsCoverage,
+  Module,
 } from "../shared/types";
 import { PRIORITIES, STATUSES, utahToday } from "../shared/types";
 import { api, query, post } from "./api";
@@ -42,8 +44,11 @@ import { LogoFull, LogoMark } from "./Logo";
 import ConfirmDialog from "./ConfirmDialog";
 import LeadsView from "./LeadsView";
 import AdminView from "./AdminView";
+import SettingsView from "./SettingsView";
 const format = new Intl.NumberFormat("en-US");
-type View = "map" | "follow-ups" | "leads" | "data" | "admin";
+type View = "map" | "follow-ups" | "leads" | "data" | "admin" | "settings";
+// Pages for admins only, outside the modules an admin can turn on or off.
+const ADMIN_VIEWS: View[] = ["admin", "settings"];
 // The pages in the sidebar, in order. Each module an admin can turn on or off
 // is one page; the admin panel is there for admins only.
 const PAGES: {
@@ -94,6 +99,14 @@ const PAGES: {
     title: "Your team, your rules.",
     text: "Choose who can sign in and which parts of Unit 50 each person uses.",
   },
+  {
+    view: "settings",
+    label: "Settings",
+    icon: <SettingsIcon size={20} />,
+    eyebrow: "THE WEBSITE, FROM HERE",
+    title: "Change the website without a release.",
+    text: "Open or close the careers page and edit what it says. Changes show on the website within seconds.",
+  },
 ];
 const emptySummary: Summary = {
   total: 0,
@@ -112,9 +125,9 @@ export default function App() {
   const pages = useMemo(
     () =>
       PAGES.filter((p) =>
-        p.view === "admin"
+        ADMIN_VIEWS.includes(p.view)
           ? account.role === "admin"
-          : account.modules.includes(p.view),
+          : account.modules.includes(p.view as Module),
       ),
     [account.role, account.modules],
   );
@@ -708,6 +721,8 @@ export default function App() {
           <LeadsView version={version} onOpenProperty={select} />
         ) : view === "admin" ? (
           <AdminView />
+        ) : view === "settings" ? (
+          <SettingsView />
         ) : view === "data" ? (
           <DataView
             summary={summary}

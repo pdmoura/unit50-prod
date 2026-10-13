@@ -311,6 +311,18 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
 }
+// The careers page on the website, as admins edit it under Settings.
+export interface CareersSettings {
+  open: boolean;
+  jobTitle: string;
+  title: string;
+  lede: string;
+  work: string[];
+  fit: string[];
+  note: string;
+  // When an admin last changed it (Unix ms); null while the defaults apply.
+  updatedAt: number | null;
+}
 export interface PropertyPage {
   items: Property[];
   total: number;

@@ -19,6 +19,7 @@ import {
   type Module,
   type Role,
   type TeamMember,
+  type CareersSettings,
 } from "../shared/types.js";
 import { runImport } from "./importer.js";
 import {
@@ -58,6 +59,7 @@ import {
   listLeads,
   updateLead,
 } from "./leads.js";
+import { websiteCareers } from "./website.js";
 import {
   detailsRun,
   refreshCountyDetails,
@@ -152,6 +154,11 @@ export async function createApp(
   const accounts = new WeakMap<object, Account>();
   const who = (req: object) => accounts.get(req) ?? LOCAL_ACCOUNT;
   const rawBodies = new WeakMap<object, string>();
+  // The Unit 50 website (unit50-studio), which sends the leads and whose
+  // careers page admins edit from Settings.
+  const websiteUrl = (
+    process.env.WEBSITE_URL || "https://unit50-studio.onrender.com"
+  ).replace(/\/+$/, "");
   // Any run from a prior process is gone. Never activate its partial staging rows.
   await sql.begin(async (tx) => {
     const now = new Date().toISOString();
@@ -756,6 +763,8 @@ export async function createApp(
               String(r.email),
             )
           : [],
+      // The public website, for the link shown while there are no leads.
+      website: websiteUrl,
     };
   });
   app.patch<{
@@ -779,6 +788,40 @@ export async function createApp(
     async (req) => updateLead(sql, who(req), req.params.id, req.body),
   );
   // Team and access (admins only; the request hook enforces that).
+  // The website's careers page (admins only): read and change it on the website.
+  const website = {
+    website: websiteUrl,
+    secret: webhookSecret,
+    fetcher: options.fetcher,
+  };
+  app.get("/api/admin/website/careers", async () => ({
+    careers: await websiteCareers(website),
+    website: websiteUrl,
+  }));
+  const line = str(240);
+  app.put<{ Body: Omit<CareersSettings, "updatedAt"> }>(
+    "/api/admin/website/careers",
+    {
+      schema: {
+        body: object(
+          {
+            open: { type: "boolean" },
+            jobTitle: str(80),
+            title: str(160),
+            lede: str(600),
+            work: { type: "array", items: line, minItems: 1, maxItems: 10 },
+            fit: { type: "array", items: line, minItems: 1, maxItems: 10 },
+            note: str(300),
+          },
+          ["open", "jobTitle", "title", "lede", "work", "fit", "note"],
+        ),
+      },
+    },
+    async (req) => ({
+      careers: await websiteCareers(website, req.body),
+      website: websiteUrl,
+    }),
+  );
   const team = async (): Promise<TeamMember[]> =>
     (
       await sql`SELECT email, role, modules, created_at FROM app_users ORDER BY role, email`

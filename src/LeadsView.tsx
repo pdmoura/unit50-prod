@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   CalendarCheck,
+  ExternalLink,
+  Hand,
   Inbox,
+  Paintbrush,
+  PhoneIncoming,
   MessageSquare,
   Navigation,
   Phone,
@@ -30,6 +34,16 @@ const COLUMNS: Column[] = ["pool", ...LEAD_STAGES];
 const columnLabel = (c: Column) =>
   c === "pool" ? "Unassigned" : LEAD_STAGE_LABELS[c];
 const columnOf = (lead: Lead): Column => (lead.owner ? lead.stage : "pool");
+// What belongs in each column, shown while it is empty.
+const COLUMN_HINTS: Record<Column, string> = {
+  pool: "New website leads land here. Take one to start.",
+  new: "Taken, not contacted yet.",
+  contacted: "Reached by phone, text or at the door.",
+  appointment: "A visit is booked to measure and quote.",
+  estimate: "They have a quote in hand.",
+  won: "Signed. Nice work.",
+  lost: "Not this time. Note why.",
+};
 const CHANGE_LABELS: Record<string, string> = {
   siding: "Siding",
   windows: "Windows",
@@ -65,14 +79,18 @@ export default function LeadsView({
     [openId, setOpenId] = useState<string | null>(null),
     [dragging, setDragging] = useState<string | null>(null),
     [over, setOver] = useState<Column | null>(null),
+    [website, setWebsite] = useState<string | null>(null),
+    [visible, setVisible] = useState<Column>("pool"),
     [tick, setTick] = useState(0);
+  const board = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let live = true;
-    api<{ items: Lead[]; team: string[] }>("/leads")
+    api<{ items: Lead[]; team: string[]; website: string | null }>("/leads")
       .then((d) => {
         if (!live) return;
         setItems(d.items);
         setTeam(d.team);
+        setWebsite(d.website);
         setLoaded(true);
         setError("");
       })
@@ -129,13 +147,44 @@ export default function LeadsView({
     [items, admin, person],
   );
   const open = items.find((l) => l.id === openId) || null;
+  // On a narrow screen the board shows about one column at a time; the stage
+  // chips above it say which one, and jump to any other.
+  useEffect(() => {
+    const el = board.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const seen = new IntersectionObserver(
+      (entries) => {
+        const best = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (best)
+          setVisible((best.target as HTMLElement).dataset.column as Column);
+      },
+      { root: el, threshold: [0.6, 0.9] },
+    );
+    el.querySelectorAll("[data-column]").forEach((c) => seen.observe(c));
+    return () => seen.disconnect();
+  }, [loaded]);
+  function jump(column: Column) {
+    setVisible(column);
+    board.current?.querySelector(`[data-column="${column}"]`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "start",
+    });
+  }
+  const working = shown.filter((l) => l.owner).length,
+    waiting = shown.filter((l) => !l.owner).length;
   return (
     <section className="content-section leads-section">
       <div className="section-toolbar leads-toolbar">
         <div>
           <strong className="leads-count">
-            {shown.filter((l) => l.owner).length} in progress ·{" "}
-            {shown.filter((l) => !l.owner).length} unassigned
+            {!loaded
+              ? "Loading leads…"
+              : items.length
+                ? `${working} in progress · ${waiting} unassigned`
+                : "Waiting for the first website lead"}
           </strong>
           <span className="muted small">
             New leads from the website arrive in Unassigned.
@@ -161,26 +210,75 @@ export default function LeadsView({
           {error}
         </div>
       )}
-      {loaded && !items.length ? (
-        <div className="large-empty">
-          <div className="empty-emblem">
-            <SquareKanban size={38} strokeWidth={1.3} />
+      {loaded && !items.length && (
+        <div className="leads-intro">
+          <div className="leads-intro-head">
+            <span className="leads-intro-icon">
+              <SquareKanban size={24} strokeWidth={1.5} />
+            </span>
+            <div>
+              <span className="eyebrow">YOUR PIPELINE STARTS HERE</span>
+              <h2>No website leads yet.</h2>
+            </div>
           </div>
-          <span className="eyebrow">YOUR PIPELINE STARTS HERE</span>
-          <h2>No website leads yet.</h2>
-          <p>
-            When a homeowner leaves their number in the exterior studio, the
-            lead appears here, ready for a rep to take.
-          </p>
+          <ol className="leads-steps">
+            <li>
+              <Paintbrush size={18} />
+              <span>
+                <strong>A homeowner designs their exterior</strong>
+                in the studio on the Unit 50 website.
+              </span>
+            </li>
+            <li>
+              <PhoneIncoming size={18} />
+              <span>
+                <strong>They leave a phone number</strong>
+                and the lead lands in Unassigned within a minute.
+              </span>
+            </li>
+            <li>
+              <Hand size={18} />
+              <span>
+                <strong>A rep takes it</strong>
+                and moves it along as the conversation goes.
+              </span>
+            </li>
+          </ol>
+          {website && (
+            <a
+              className="secondary-button"
+              href={`${website}/studio`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open the website studio
+              <ExternalLink size={15} />
+            </a>
+          )}
         </div>
-      ) : (
-        <div className="lead-board" aria-label="Lead pipeline">
+      )}
+      <nav className="stage-chips" aria-label="Pipeline stages">
+        {COLUMNS.map((column) => (
+          <button
+            key={column}
+            className={visible === column ? "selected" : ""}
+            aria-current={visible === column ? "true" : undefined}
+            onClick={() => jump(column)}
+          >
+            {columnLabel(column)}
+            <span>{shown.filter((l) => columnOf(l) === column).length}</span>
+          </button>
+        ))}
+      </nav>
+      {
+        <div className="lead-board" aria-label="Lead pipeline" ref={board}>
           {COLUMNS.map((column) => {
             const cards = shown.filter((l) => columnOf(l) === column);
             return (
               <section
                 key={column}
-                className={`lead-column ${column === "pool" ? "pool" : ""} ${over === column ? "drop-target" : ""}`}
+                data-column={column}
+                className={`lead-column ${column === "pool" ? "pool" : ""} ${cards.length ? "" : "empty"} ${over === column ? "drop-target" : ""}`}
                 aria-label={columnLabel(column)}
                 onDragOver={(e) => {
                   if (!dragging) return;
@@ -256,16 +354,14 @@ export default function LeadsView({
                     </button>
                   ))}
                   {!cards.length && (
-                    <p className="lead-empty">
-                      {column === "pool" ? "Nothing waiting" : "No leads"}
-                    </p>
+                    <p className="lead-empty">{COLUMN_HINTS[column]}</p>
                   )}
                 </div>
               </section>
             );
           })}
         </div>
-      )}
+      }
       {open && (
         <LeadPanel
           key={open.id}

@@ -3051,3 +3051,379 @@ button.is-busy:disabled {
   font-size: 12px;
   padding: 9px 11px;
 }
+/* The welcome card shown until the first website lead arrives: how a lead
+   reaches the board, in three steps. */
+.leads-intro {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 2.4fr) auto;
+  align-items: center;
+  gap: 18px 28px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  border: 1px solid #d3e0c4;
+  border-radius: 10px;
+  background: #f4f8ee;
+}
+.leads-intro-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.leads-intro-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #fff;
+  color: #547246;
+  box-shadow: 0 1px 3px #29442014;
+}
+.leads-intro h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.leads-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.leads-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5f6c5c;
+}
+.leads-steps li svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #547246;
+}
+.leads-steps strong {
+  display: block;
+  font-weight: 600;
+  color: #23352d;
+}
+/* Stage chips: only on narrow screens, where the board shows about one
+   column at a time. */
+.stage-chips {
+  display: none;
+}
+.lead-column.empty {
+  min-height: 220px;
+}
+.lead-column.empty .lead-empty {
+  padding: 16px 12px;
+  line-height: 1.5;
+}
+@media (max-width: 1200px) {
+  .leads-intro {
+    grid-template-columns: 1fr auto;
+  }
+  .leads-steps {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+@media (max-width: 900px) {
+  .stage-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin: 0 -24px 12px;
+    padding: 2px 24px 6px;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 24px;
+  }
+  .stage-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .stage-chips button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    color: #5f6c5c;
+    white-space: nowrap;
+  }
+  .stage-chips button span {
+    font-size: 10px;
+    font-weight: 600;
+    color: #7d8b70;
+    background: #f0f3e9;
+    border-radius: 10px;
+    padding: 1px 7px;
+  }
+  .stage-chips button.selected {
+    border-color: var(--green);
+    background: var(--green);
+    color: #fff;
+  }
+  .stage-chips button.selected span {
+    background: #ffffff2b;
+    color: #fff;
+  }
+  .lead-board {
+    grid-auto-columns: minmax(260px, 46%);
+    scroll-snap-type: x mandatory;
+  }
+}
+@media (max-width: 650px) {
+  .leads-section {
+    padding: 16px;
+  }
+  .leads-intro {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .leads-steps {
+    grid-template-columns: 1fr;
+    grid-row: auto;
+  }
+  .leads-intro .secondary-button {
+    justify-self: stretch;
+  }
+  .stage-chips {
+    margin: 0 -16px 12px;
+    padding: 2px 16px 6px;
+    scroll-padding-inline: 16px;
+  }
+  .lead-board {
+    grid-auto-columns: 86%;
+    margin: 0 -16px;
+    padding: 0 16px 8px;
+    scroll-padding-inline: 16px;
+  }
+  .lead-column {
+    min-height: 260px;
+  }
+  /* 16px keeps phones from zooming the page when a field is focused. */
+  .lead-person select,
+  .lead-controls select,
+  .lead-notes textarea,
+  .team-add-fields input,
+  .team-add-fields select,
+  .team-role select,
+  .settings-form input,
+  .settings-form textarea {
+    font-size: 16px;
+  }
+}
+/* Team access on a tablet or phone: each person is a card, with the module
+   switches two to a row under the name and role. */
+@media (max-width: 900px) {
+  .team-row {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 14px;
+  }
+  .team-person {
+    grid-column: 1;
+  }
+  .team-remove {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .team-role {
+    grid-column: 1 / -1;
+  }
+  .team-module {
+    grid-column: auto;
+  }
+}
+@media (max-width: 420px) {
+  .team-row {
+    grid-template-columns: 1fr;
+  }
+  .team-person,
+  .team-remove,
+  .team-role,
+  .team-module {
+    grid-column: 1;
+  }
+  .team-remove {
+    grid-row: 1;
+    justify-self: end;
+    margin-top: -4px;
+  }
+  .team-person {
+    grid-row: 1;
+    padding-right: 40px;
+  }
+}
+/* Settings: one card per website setting (the careers page for now). */
+.settings-section {
+  min-height: 0;
+}
+.settings-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+.settings-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.settings-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.settings-head h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.settings-head p {
+  margin: 2px 0 0;
+}
+.settings-switch {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.settings-switch-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3d5440;
+  min-width: 46px;
+}
+.settings-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: #eef5e7;
+  color: #2f5d33;
+  font-size: 12px;
+}
+.settings-notice a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.settings-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 4px;
+  font-size: 12px;
+  color: #6f7a6c;
+}
+.settings-loading .button-spin {
+  width: 20px;
+  color: var(--green);
+}
+.settings-form {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+.settings-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5f6c5c;
+}
+.settings-grid .wide {
+  grid-column: 1 / -1;
+}
+.settings-grid input,
+.settings-grid textarea {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #23352d;
+  letter-spacing: 0;
+}
+.settings-grid textarea {
+  resize: vertical;
+}
+.settings-grid .help {
+  font-weight: 400;
+  font-size: 10px;
+  color: #8a9483;
+}
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.settings-actions .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: auto;
+}
+@media (max-width: 900px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 650px) {
+  .settings-section {
+    padding: 16px;
+  }
+  .settings-card {
+    padding: 16px;
+  }
+  /* 16px keeps phones from zooming the page when a field is focused. */
+  .settings-grid input,
+  .settings-grid textarea {
+    font-size: 16px;
+  }
+  .settings-head {
+    flex-wrap: wrap;
+  }
+  .settings-head .leads-intro-icon {
+    display: none;
+  }
+  .settings-switch {
+    order: -1;
+    margin-left: auto;
+  }
+  .settings-head > div {
+    flex-basis: 100%;
+  }
+  .settings-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .settings-actions .text-link {
+    margin: 6px auto 0;
+  }
+  .settings-actions button {
+    width: 100%;
+    padding: 14px 15px;
+  }
+}

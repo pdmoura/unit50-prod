@@ -125,6 +125,7 @@ O site envia cada lead novo e cada pedido de acompanhamento como um POST assinad
 - O endereço do lead é ligado à parcela do condado quando não há dúvida: mesmo número e rua perto do ponto do mapa, ou a única parcela a até 25 m do ponto. Sem isso, o lead fica sem parcela.
 - Só links de imagem do Cloudinary (`res.cloudinary.com`) são guardados; qualquer outro é descartado.
 - **Quadro de leads**: colunas **Unassigned** (fila do time), **New**, **Contacted**, **Appointment set**, **Estimate sent**, **Won** e **Lost**. O rep vê a fila e os próprios leads; mover um lead da fila (arrastando no computador ou pelo campo Stage na ficha) faz dele o responsável, e ele pode devolver o lead à fila. Dois reps nunca ficam com o mesmo lead. O admin vê todos, filtra por pessoa e atribui a qualquer um do time. Remover uma pessoa devolve os leads dela para a fila.
+- No celular e no tablet, o quadro mostra uma coluna por vez; os botões de etapa acima dele mostram a coluna atual e levam a qualquer outra. Enquanto não houver lead, um cartão explica como o lead chega e tem o link para o estúdio do site.
 - A ficha do lead mostra telefone (ligar ou mandar mensagem), se a pessoa pediu acompanhamento, se marcou "OK to contact me" no site, o interesse (siding, windows), a foto e o desenho do estúdio, e o link para a parcela no mapa.
 
 Sem essas duas variáveis o aplicativo roda sem login e aceita conexões apenas da própria máquina; o servidor se recusa a iniciar num endereço público nessa condição.
@@ -173,6 +174,14 @@ npx tsx scripts/street-view-check.ts --all                  # todos os que falta
   - `failed`: a consulta não funcionou (tempo esgotado, erro do servidor, limite de uso). Não é gravado e nunca vira `none`; a próxima execução tenta de novo.
 - Chave recusada pelo Google ou 25 falhas seguidas interrompem a execução, em vez de marcar o condado inteiro como falha.
 - Progresso e problemas ficam na pasta local `street-view-report/` (fora do Git): `checkpoint-<banco>.jsonl` (uma linha por imóvel consultado), `report-<banco>.json` (totais da última execução) e `review-<banco>.csv` (incertos e falhas, com endereço).
+
+## Configurações do site (Settings)
+
+Só para admins. A página **Settings** abre ou fecha a página de vagas do site (`/careers`) e edita o texto dela: cargo, título, introdução, as duas listas e a observação. As mudanças aparecem no site em até cerca de 10 segundos, sem novo deploy.
+
+- O site guarda essas configurações no banco dele (tabela `site_settings`), então nunca depende deste aplicativo para abrir uma página. Este aplicativo lê e grava pelo endpoint `/api/admin/careers` do site, com a mesma chave compartilhada dos leads (`LEADS_WEBHOOK_SECRET` aqui, `WEBHOOK_SECRET` no site). A assinatura inclui método e caminho, então um envio de lead nunca vale como mudança de configuração.
+- O endereço do site vem de `WEBSITE_URL` (padrão `https://unit50-studio.onrender.com`). Se o site estiver dormindo, a primeira leitura pode levar até um minuto.
+- Fechada, a página `/careers` e o formulário respondem 404 e os links somem do menu, do rodapé, da página 404 e do sitemap.
 
 ## Banco, backup e recuperação
 
