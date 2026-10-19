@@ -1,4 +1,6 @@
 # Local development database. Production uses the hosted database in DATABASE_URL.
+# The fixed name keeps the same container and data wherever this folder is moved.
+name: unit50-prod
 services:
   db:
     image: postgres:17-alpine
