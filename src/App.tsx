@@ -49,6 +49,8 @@ const format = new Intl.NumberFormat("en-US");
 type View = "map" | "follow-ups" | "leads" | "data" | "admin" | "settings";
 // Pages for admins only, outside the modules an admin can turn on or off.
 const ADMIN_VIEWS: View[] = ["admin", "settings"];
+// County imports and Parcel Search fetches: the super admin alone.
+const SUPER_ADMIN_VIEWS: View[] = ["data"];
 // The pages in the sidebar, in order. Each module an admin can turn on or off
 // is one page; the admin panel is there for admins only.
 const PAGES: {
@@ -125,11 +127,13 @@ export default function App() {
   const pages = useMemo(
     () =>
       PAGES.filter((p) =>
-        ADMIN_VIEWS.includes(p.view)
-          ? account.role === "admin"
-          : account.modules.includes(p.view as Module),
+        SUPER_ADMIN_VIEWS.includes(p.view)
+          ? account.superAdmin
+          : ADMIN_VIEWS.includes(p.view)
+            ? account.role === "admin"
+            : account.modules.includes(p.view as Module),
       ),
-    [account.role, account.modules],
+    [account.role, account.modules, account.superAdmin],
   );
   const pick = useCallback(
     (wanted: string) =>
@@ -646,23 +650,27 @@ export default function App() {
                         <p>
                           {summary.total
                             ? "Try a different address or broaden your filters."
-                            : "Import Weber County records to find your first opportunity."}
+                            : account.superAdmin
+                              ? "Import Weber County records to find your first opportunity."
+                              : "The county records have not been loaded yet. The super admin loads them."}
                         </p>
-                        <button
-                          className="secondary-button"
-                          onClick={() =>
-                            summary.total
-                              ? (setFilters({}),
-                                setSearch(""),
-                                setLimitArea(false))
-                              : navigate("data")
-                          }
-                        >
-                          {summary.total
-                            ? "Clear filters"
-                            : "Import county data"}
-                          <ArrowRight size={16} />
-                        </button>
+                        {(summary.total > 0 || account.superAdmin) && (
+                          <button
+                            className="secondary-button"
+                            onClick={() =>
+                              summary.total
+                                ? (setFilters({}),
+                                  setSearch(""),
+                                  setLimitArea(false))
+                                : navigate("data")
+                            }
+                          >
+                            {summary.total
+                              ? "Clear filters"
+                              : "Import county data"}
+                            <ArrowRight size={16} />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

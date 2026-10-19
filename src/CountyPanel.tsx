@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowUpRight, RefreshCw, Info, AlertCircle } from "lucide-react";
+import { useAccount } from "./AuthGate";
 import type { PropertyDetail } from "../shared/types";
 import { post } from "./api";
 import { eventTime } from "./DetailPanel";
@@ -28,6 +29,8 @@ export default function CountyPanel({
   property: PropertyDetail;
   onChange: () => void;
 }) {
+  // Reading Weber County Parcel Search is county data work: the super admin's.
+  const { superAdmin } = useAccount();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const d = p.county?.data,
@@ -240,18 +243,20 @@ export default function CountyPanel({
           {error}
         </div>
       )}
-      <button
-        className="secondary-button full county-refresh"
-        disabled={busy}
-        onClick={() => void refresh()}
-      >
-        <RefreshCw size={16} className={busy ? "spin" : ""} />
-        {busy
-          ? "Reading Parcel Search…"
-          : d
-            ? "Refresh from Parcel Search"
-            : "Fetch from Parcel Search"}
-      </button>
+      {superAdmin && (
+        <button
+          className="secondary-button full county-refresh"
+          disabled={busy}
+          onClick={() => void refresh()}
+        >
+          <RefreshCw size={16} className={busy ? "spin" : ""} />
+          {busy
+            ? "Reading Parcel Search…"
+            : d
+              ? "Refresh from Parcel Search"
+              : "Fetch from Parcel Search"}
+        </button>
+      )}
       <p className="field-note">
         {p.county?.data &&
           `Parcel Search read ${eventTime(p.county.fetchedAt)}. `}
@@ -264,8 +269,10 @@ export default function CountyPanel({
         <div className="notice">
           <Info size={17} />
           <p>
-            No owner data yet. Run “Refresh county data” on the Data screen to
-            load owners and taxes for every parcel.
+            No owner data yet.{" "}
+            {superAdmin
+              ? "Run “Refresh county data” on the Data screen to load owners and taxes for every parcel."
+              : "The super admin loads owners and taxes for every parcel."}
           </p>
         </div>
       )}

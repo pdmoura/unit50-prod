@@ -8,8 +8,13 @@ import { hideSplash } from "./splash";
 import { MODULES, type Account as Person } from "../shared/types";
 
 // Who is signed in and what they may open, for the app shell. Without sign-in
-// (the single-user local mode) the person is an admin with every module.
-const LOCAL: Person = { email: null, role: "admin", modules: [...MODULES] };
+// (the single-user local mode) the person is the owner: super admin, every module.
+const LOCAL: Person = {
+  email: null,
+  role: "admin",
+  modules: [...MODULES],
+  superAdmin: true,
+};
 const Account = createContext<Person & { signOut: (() => void) | null }>({
   ...LOCAL,
   signOut: null,

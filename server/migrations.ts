@@ -232,4 +232,18 @@ CREATE INDEX leads_board ON leads (owner, stage);
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 `,
   },
+  {
+    version: 8,
+    sql: `
+-- The super admin (the owner of the app) is the only one who sees Data &
+-- imports and runs county imports and Parcel Search fetches. Set only from the
+-- server with scripts/allow-user.ts --super-admin, never from the app.
+ALTER TABLE app_users ADD COLUMN super_admin boolean NOT NULL DEFAULT false;
+-- Data & imports is no longer a module admins turn on for people.
+UPDATE app_users SET modules = array_remove(modules, 'data');
+ALTER TABLE app_users ALTER COLUMN modules SET DEFAULT ARRAY['map', 'follow-ups', 'leads'];
+ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_modules_check;
+ALTER TABLE app_users ADD CONSTRAINT app_users_modules_check CHECK (modules <@ ARRAY['map', 'follow-ups', 'leads']);
+`,
+  },
 ];

@@ -107,8 +107,12 @@ test("each API call belongs to one module, and only admins reach the admin panel
   assert.equal(areaFor("PATCH", "/api/follow-ups/1"), "property");
   assert.equal(areaFor("GET", "/api/leads"), "leads");
   assert.equal(areaFor("PATCH", "/api/leads/1"), "leads");
-  assert.equal(areaFor("GET", "/api/imports"), "data");
-  assert.equal(areaFor("GET", "/api/county-details"), "data");
+  assert.equal(areaFor("GET", "/api/imports"), "super-admin");
+  assert.equal(areaFor("POST", "/api/imports"), "super-admin");
+  assert.equal(areaFor("GET", "/api/data/issues"), "super-admin");
+  assert.equal(areaFor("GET", "/api/county-details"), "super-admin");
+  assert.equal(areaFor("POST", "/api/county-details/runs"), "super-admin");
+  assert.equal(areaFor("POST", "/api/properties/1/county"), "super-admin");
   assert.equal(areaFor("GET", "/api/admin/users"), "admin");
   assert.equal(areaFor("GET", "/api/summary"), "signed-in");
   const rep = accountFrom({ email: "a@b.co", role: "rep", modules: ["leads"] });
@@ -117,7 +121,18 @@ test("each API call belongs to one module, and only admins reach the admin panel
   assert.equal(allowed(rep, "property"), true);
   assert.equal(allowed(rep, "admin"), false);
   const admin = accountFrom({ email: "a@b.co", role: "admin", modules: [] });
-  assert.deepEqual(admin.modules, ["map", "follow-ups", "leads", "data"]);
+  assert.deepEqual(admin.modules, ["map", "follow-ups", "leads"]);
+  // Imports belong to the super admin alone, not to admins.
+  assert.equal(allowed(admin, "super-admin"), false);
+  const owner = accountFrom({
+    email: "a@b.co",
+    role: "rep",
+    modules: [],
+    superAdmin: true,
+  });
+  assert.equal(owner.role, "admin");
+  assert.equal(allowed(owner, "super-admin"), true);
+  assert.equal(allowed(owner, "admin"), true);
   assert.equal(allowed(admin, "admin"), true);
 });
 
@@ -223,7 +238,7 @@ test("admins manage the team; turning a module off applies on the next request",
         .json()
         .items.find((m: { email: string }) => m.email === "cara@unit50.com")
         .modules,
-      ["map", "follow-ups", "leads", "data"],
+      ["map", "follow-ups", "leads"],
     );
     assert.equal(
       (
@@ -304,7 +319,9 @@ test("admins manage the team; turning a module off applies on the next request",
       403,
     );
   } finally {
-    people.splice(people.indexOf("cara@unit50.com"), 1);
+    // Only if the test got as far as adding her.
+    if (people.includes("cara@unit50.com"))
+      people.splice(people.indexOf("cara@unit50.com"), 1);
     await t.close();
   }
 });
@@ -810,5 +827,100 @@ test("webhook is off without a secret", async () => {
   } finally {
     await app.close();
     await dropSchema(schema);
+  }
+});
+
+test("only the super admin reaches county data; nobody can change them from the app", async () => {
+  const t = await team();
+  people.push("owner@unit50.com");
+  try {
+    await t.sql`INSERT INTO app_users (email, role, modules, super_admin) VALUES ('owner@unit50.com', 'rep', '{}', true)`;
+    const me = (await t.call("owner@unit50.com", "GET", "/api/me")).json();
+    assert.deepEqual(me, {
+      email: "owner@unit50.com",
+      role: "admin",
+      modules: ["map", "follow-ups", "leads"],
+      superAdmin: true,
+    });
+    for (const url of [
+      "/api/imports",
+      "/api/data/issues",
+      "/api/county-details",
+    ]) {
+      assert.equal(
+        (await t.call("owner@unit50.com", "GET", url)).statusCode,
+        200,
+        url,
+      );
+      // Admins and reps are turned away before any import code runs.
+      for (const as of ["admin@unit50.com", "ana@unit50.com"]) {
+        const refused = await t.call(as, "GET", url);
+        assert.equal(refused.statusCode, 403, `${as} ${url}`);
+        assert.match(refused.json().error, /does not have access/);
+      }
+    }
+    for (const [method, url] of [
+      ["POST", "/api/imports"],
+      ["POST", "/api/county-details/runs"],
+      ["POST", "/api/properties/001234567/county"],
+    ] as const) {
+      const refused = await t.call("admin@unit50.com", method, url, {});
+      assert.equal(refused.statusCode, 403, url);
+      assert.match(refused.json().error, /does not have access/);
+      // The super admin gets past the access check (this test server has imports switched off).
+      const owner = await t.call("owner@unit50.com", method, url, {});
+      assert.doesNotMatch(
+        String(owner.json().error),
+        /does not have access/,
+        url,
+      );
+    }
+    // The team list shows the super admin, and the app cannot change or remove them.
+    const listed = (
+      await t.call("admin@unit50.com", "GET", "/api/admin/users")
+    ).json().items;
+    assert.equal(listed[0].email, "owner@unit50.com");
+    assert.equal(listed[0].superAdmin, true);
+    for (const [method, payload] of [
+      ["PATCH", { role: "rep" }],
+      ["PATCH", { modules: ["map"] }],
+      ["DELETE", undefined],
+    ] as const) {
+      const r = await t.call(
+        "admin@unit50.com",
+        method,
+        "/api/admin/users/owner@unit50.com",
+        payload,
+      );
+      assert.equal(r.statusCode, 409);
+      assert.match(r.json().error, /managed from the server/);
+    }
+    // There is no way to make someone super admin through the API.
+    assert.equal(
+      (
+        await t.call(
+          "admin@unit50.com",
+          "PATCH",
+          "/api/admin/users/ana@unit50.com",
+          { superAdmin: true },
+        )
+      ).statusCode,
+      400,
+    );
+    // Modules can no longer include Data & imports.
+    assert.equal(
+      (
+        await t.call(
+          "admin@unit50.com",
+          "PATCH",
+          "/api/admin/users/ana@unit50.com",
+          { modules: ["data"] },
+        )
+      ).statusCode,
+      400,
+    );
+  } finally {
+    people.splice(people.indexOf("owner@unit50.com"), 1);
+    await t.close();
   }
 });

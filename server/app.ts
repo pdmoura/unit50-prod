@@ -211,13 +211,18 @@ export async function createApp(
     const user = token ? await tokens.verify(token) : null;
     if (!user) return reply.code(401).send({ error: "Sign in to continue." });
     const [enabled] =
-      await sql`SELECT email, role, modules FROM app_users WHERE email=${user.email}`;
+      await sql`SELECT email, role, modules, super_admin FROM app_users WHERE email=${user.email}`;
     if (!enabled)
       return reply
         .code(403)
         .send({ error: "This account is not enabled for Unit 50." });
     const account = accountFrom(
-      enabled as unknown as { email: string; role: string; modules: string[] },
+      enabled as unknown as {
+        email: string;
+        role: string;
+        modules: string[];
+        superAdmin: boolean;
+      },
     );
     // Read on every request, so a change an admin makes applies at once.
     if (!allowed(account, areaFor(req.method, path)))
@@ -824,10 +829,15 @@ export async function createApp(
   );
   const team = async (): Promise<TeamMember[]> =>
     (
-      await sql`SELECT email, role, modules, created_at FROM app_users ORDER BY role, email`
+      await sql`SELECT email, role, modules, super_admin, created_at FROM app_users ORDER BY super_admin DESC, role, email`
     ).map((r) => ({
       ...accountFrom(
-        r as unknown as { email: string; role: string; modules: string[] },
+        r as unknown as {
+          email: string;
+          role: string;
+          modules: string[];
+          superAdmin: boolean;
+        },
       ),
       email: String(r.email),
       createdAt: String(r.createdAt),
@@ -859,9 +869,15 @@ export async function createApp(
   ) {
     await sql.begin(async (tx) => {
       const rows =
-        await tx`SELECT email, role FROM app_users WHERE role='admin' OR email=${email} FOR UPDATE`;
+        await tx`SELECT email, role, super_admin FROM app_users WHERE role='admin' OR email=${email} FOR UPDATE`;
       const target = rows.find((r) => r.email === email);
       if (!target) throw new AppError(404, "That person is not on the team.");
+      // The super admin is set and removed only from the server.
+      if (target.superAdmin)
+        throw new AppError(
+          409,
+          "The super admin is managed from the server, not from the app.",
+        );
       if (email === actor.email && (change.remove || change.role))
         throw new AppError(
           409,

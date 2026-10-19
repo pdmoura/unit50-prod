@@ -2905,7 +2905,7 @@ button.is-busy:disabled {
 .team-row {
   display: grid;
   grid-template-columns:
-    minmax(200px, 2fr) 110px repeat(4, minmax(90px, 1fr))
+    minmax(200px, 2fr) 110px repeat(3, minmax(90px, 1fr))
     44px;
   align-items: center;
   gap: 10px;

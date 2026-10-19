@@ -149,7 +149,8 @@ test("API needs a signed-in user who is enabled in app_users", async () => {
     assert.deepEqual((await get("/api/me", "rep-token")).json(), {
       email: "rep@unit50.com",
       role: "rep",
-      modules: ["map", "follow-ups", "leads", "data"],
+      modules: ["map", "follow-ups", "leads"],
+      superAdmin: false,
     });
     assert.equal(
       (await get("/api/summary?x=/api/health", "made-up")).statusCode,

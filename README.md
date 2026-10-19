@@ -10,7 +10,7 @@ Na pasta do projeto:
 
 ```powershell
 Copy-Item .env.example .env   # ajuste DATABASE_URL, DATABASE_URL_DEV e as variáveis CLOUDINARY_*
-npm run db:up                 # só para o banco local em Docker (porta 54350)
+npm run db:up                 # só para o banco local em Docker (porta 15432)
 npm ci
 npm run build
 npm start
@@ -112,7 +112,8 @@ Para liberar uma pessoa:
 
 ### Papéis e módulos
 
-- **Admin**: usa todos os módulos e o painel **Team & access**, onde adiciona e remove pessoas, muda o papel e liga ou desliga, por pessoa, cada módulo: **Prospecting map**, **Follow-ups**, **Leads** e **Data & imports**. Um admin não pode remover a si mesmo nem mudar o próprio papel, e o time sempre fica com pelo menos um admin.
+- **Super admin** (o dono do aplicativo): tudo o que o admin faz, mais a página **Data & imports**, a importação do condado, a leitura em lote do Parcel Search e o botão de atualizar o Parcel Search na ficha. Admins e reps não veem nem acessam nada disso; o servidor recusa as chamadas. Só é dado ou retirado no servidor, nunca pelo aplicativo: `npx tsx scripts/allow-user.ts voce@empresa.com --super-admin` (ou `--no-super-admin`). O painel **Team & access** mostra quem é, mas não deixa mudar o papel nem remover essa pessoa. Sem login (modo local), quem usa o computador é o super admin.
+- **Admin**: usa todos os módulos e o painel **Team & access**, onde adiciona e remove pessoas, muda o papel e liga ou desliga, por pessoa, cada módulo: **Prospecting map**, **Follow-ups** e **Leads**. Um admin não pode remover a si mesmo nem mudar o próprio papel, e o time sempre fica com pelo menos um admin.
 - **Rep**: começa com todos os módulos ligados. O servidor confere o acesso em cada chamada, então uma mudança vale no clique seguinte da pessoa. A ficha do imóvel abre a partir do mapa, dos follow-ups e dos leads, então fica disponível com qualquer um desses três módulos.
 - Cada visita e cada follow-up guardam o email de quem registrou (`created_by`). O rep vê e altera só os próprios follow-ups (na página Follow-ups, na ficha e nos contadores); o histórico de visitas do imóvel é do time inteiro e mostra quem bateu. O admin vê os follow-ups de todos, com **Everyone / Mine**. Registros anteriores ao login não têm autor e aparecem só para admins.
 - Sem login (modo local), a pessoa no computador é tratada como admin.
@@ -187,7 +188,7 @@ Só para admins. A página **Settings** abre ou fecha a página de vagas do site
 
 Banco PostgreSQL definido em `DATABASE_URL` (produção) ou `DATABASE_URL_DEV` (desenvolvimento, com `--dev`). As migrações ficam em `server/migrations.ts`, são registradas na tabela `schema_migrations` e aplicadas ao iniciar o servidor. Não apague o banco para atualizar os dados.
 
-Banco local (Docker): `npm run db:up` cria o Postgres em `127.0.0.1:54350` com volume persistente. Para uma cópia de segurança:
+Banco local (Docker): `npm run db:up` cria o Postgres em `127.0.0.1:15432` com volume persistente. Para uma cópia de segurança:
 
 ```powershell
 docker compose exec -T db pg_dump -U unit50 -d unit50 -Fc -f /tmp/unit50.dump

@@ -10,7 +10,7 @@ function testDatabaseUrl() {
   if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL;
   const url = new URL(
     process.env.DATABASE_URL_DEV ||
-      "postgres://unit50:unit50@127.0.0.1:54350/unit50",
+      "postgres://unit50:unit50@127.0.0.1:15432/unit50",
   );
   url.pathname = `${url.pathname}_test`;
   return url.href;

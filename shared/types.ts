@@ -246,14 +246,14 @@ export interface Summary {
   photosEnabled: boolean;
 }
 // The parts of Unit 50 an admin can turn on or off for each person. Admins
-// always have all of them, plus the admin panel.
-export const MODULES = ["map", "follow-ups", "leads", "data"] as const;
+// always have all of them, plus the admin panel. Data & imports is not one of
+// them: only the super admin uses it.
+export const MODULES = ["map", "follow-ups", "leads"] as const;
 export type Module = (typeof MODULES)[number];
 export const MODULE_LABELS: Record<Module, string> = {
   map: "Prospecting map",
   "follow-ups": "Follow-ups",
   leads: "Leads",
-  data: "Data & imports",
 };
 export type Role = "admin" | "rep";
 // Who is using the app and what they may open. email is null when sign-in is
@@ -262,11 +262,15 @@ export interface Account {
   email: string | null;
   role: Role;
   modules: Module[];
+  // The owner of the app: also runs county imports and Parcel Search fetches
+  // (Data & imports). Set only from the server, never from the app.
+  superAdmin: boolean;
 }
 export interface TeamMember {
   email: string;
   role: Role;
   modules: Module[];
+  superAdmin: boolean;
   createdAt: string;
 }
 // The pipeline a website lead moves through. A lead with no owner sits in the

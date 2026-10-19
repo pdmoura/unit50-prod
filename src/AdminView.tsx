@@ -136,7 +136,9 @@ export default function AdminView() {
           </div>
           {members.map((m) => {
             const me = m.email === account.email,
-              isAdmin = m.role === "admin";
+              isAdmin = m.role === "admin",
+              // Set and removed only from the server.
+              locked = m.superAdmin;
             return (
               <div
                 className={`team-row ${busy === m.email ? "saving" : ""}`}
@@ -149,7 +151,11 @@ export default function AdminView() {
                   </span>
                   <span>
                     <strong title={m.email}>{m.email}</strong>
-                    {me && <span className="micro">YOU</span>}
+                    <span className="micro">
+                      {[m.superAdmin && "SUPER ADMIN", me && "YOU"]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   </span>
                 </span>
                 <span role="cell" className="team-role">
@@ -159,9 +165,13 @@ export default function AdminView() {
                   <select
                     id={`role-${m.email}`}
                     value={m.role}
-                    disabled={me || busy === m.email}
+                    disabled={me || locked || busy === m.email}
                     title={
-                      me ? "Another admin can change your role." : undefined
+                      locked
+                        ? "The super admin is managed from the server."
+                        : me
+                          ? "Another admin can change your role."
+                          : undefined
                     }
                     onChange={(e) =>
                       void act(m.email, () =>
@@ -193,7 +203,7 @@ export default function AdminView() {
                   </span>
                 ))}
                 <span role="cell" className="team-remove">
-                  {!me && (
+                  {!me && !locked && (
                     <button
                       className="icon-button"
                       aria-label={`Remove ${m.email}`}
@@ -213,7 +223,8 @@ export default function AdminView() {
       <p className="muted small team-note">
         <ShieldCheck size={14} />
         Admins have every module and this panel. A rep sees their own follow-ups
-        and leads, plus the leads waiting in Unassigned.
+        and leads, plus the leads waiting in Unassigned. County imports (Data &
+        imports) are for the super admin only.
       </p>
       {removing && (
         <ConfirmDialog
