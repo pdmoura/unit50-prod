@@ -131,9 +131,11 @@ O site envia cada lead novo e cada pedido de acompanhamento como um POST assinad
 
 Sem essas duas variáveis o aplicativo roda sem login e aceita conexões apenas da própria máquina; o servidor se recusa a iniciar num endereço público nessa condição.
 
-## Publicação (Render)
+## Publicação (Railway)
 
-`render.yaml` descreve o serviço: Node, região Oregon (ao lado do banco no Supabase), build `npm ci --include=dev && npm run build`, início `npm start`, verificação em `/api/health`. As variáveis `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `CLOUDINARY_*` são definidas no painel do Render. Cada push na branch `main` gera um novo deploy. A importação do condado e a leitura em lote do Parcel Search são pesadas para uma instância pequena; rode-as do seu computador com `npm start` (mesmo banco).
+O aplicativo roda no Railway, projeto `unit50`, serviço `fieldwork`, região US West (Califórnia, ao lado do banco no Supabase em Oregon), com deploy a cada push na branch `main`. As configurações ficam no próprio serviço (painel do Railway), sem arquivo no repositório: build `npm run build`, início `npm start`, verificação de saúde em `/api/health`, reinício em caso de falha. No Railway o servidor escuta em todas as interfaces sozinho (`RAILWAY_ENVIRONMENT`); em outro servidor, defina `HOST=0.0.0.0`.
+
+Variáveis no serviço: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CLOUDINARY_*`, `LEADS_WEBHOOK_SECRET`, `WEBSITE_URL` e `PORT=8080`. A importação do condado e a leitura em lote do Parcel Search são pesadas e raras; rode-as do seu computador com `npm start` (mesmo banco), como super admin.
 
 ## Fotos do imóvel (Cloudinary)
 
