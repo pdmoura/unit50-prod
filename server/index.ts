@@ -5,8 +5,13 @@ import { databaseUrl, describeDatabase, devMode } from "./db.js";
 if (existsSync(".env")) process.loadEnvFile(".env");
 const url = databaseUrl(),
   auth = authConfig(),
-  // Hosting platforms route traffic to all interfaces; a computer serves only itself.
-  host = process.env.HOST || (process.env.RENDER ? "0.0.0.0" : "127.0.0.1");
+  // Hosting platforms (Render, Railway) route traffic to all interfaces; a
+  // computer serves only itself. HOST overrides both, for example on a VPS.
+  host =
+    process.env.HOST ||
+    (process.env.RENDER || process.env.RAILWAY_ENVIRONMENT
+      ? "0.0.0.0"
+      : "127.0.0.1");
 if (!auth && !["127.0.0.1", "localhost", "::1"].includes(host))
   throw new Error(
     "Refusing to listen on a public address without sign-in. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.",
