@@ -133,7 +133,7 @@ Sem essas duas variáveis o aplicativo roda sem login e aceita conexões apenas 
 
 ## Publicação (Railway)
 
-O aplicativo roda no Railway, projeto `unit50`, serviço `fieldwork`, região US West (Califórnia, ao lado do banco no Supabase em Oregon), com deploy a cada push na branch `main`. As configurações ficam no próprio serviço (painel do Railway), sem arquivo no repositório: build `npm run build`, início `npm start`, verificação de saúde em `/api/health`, reinício em caso de falha. No Railway o servidor escuta em todas as interfaces sozinho (`RAILWAY_ENVIRONMENT`); em outro servidor, defina `HOST=0.0.0.0`.
+O aplicativo roda no Railway, projeto `unit50`, serviço `crm` (https://unit50-crm.up.railway.app; o site é o serviço `landing`, https://unit50-landing.up.railway.app), região US West (Califórnia, ao lado do banco no Supabase em Oregon), com deploy a cada push na branch `main`. As configurações ficam no próprio serviço (painel do Railway), sem arquivo no repositório: build `npm run build`, início `npm start`, verificação de saúde em `/api/health`, reinício em caso de falha. No Railway o servidor escuta em todas as interfaces sozinho (`RAILWAY_ENVIRONMENT`); em outro servidor, defina `HOST=0.0.0.0`.
 
 Variáveis no serviço: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CLOUDINARY_*`, `LEADS_WEBHOOK_SECRET`, `WEBSITE_URL` e `PORT=8080`. A importação do condado e a leitura em lote do Parcel Search são pesadas e raras; rode-as do seu computador com `npm start` (mesmo banco), como super admin.
 
