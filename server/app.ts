@@ -235,9 +235,11 @@ export async function createApp(
     const e = error as Error & { statusCode?: number; validation?: unknown };
     const code = e.validation ? 400 : e.statusCode || 500;
     if (code >= 500) app.log.error(error);
+    // Messages the app writes itself (AppError) are meant for people, even for
+    // 5xx (the website is down, a setting is missing); anything else stays hidden.
     reply.code(code).send({
       error:
-        code >= 500
+        code >= 500 && !(error instanceof AppError)
           ? "An unexpected error occurred. Your saved data was not replaced."
           : e.message,
     });
