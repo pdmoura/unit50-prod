@@ -173,3 +173,26 @@ test("only admins reach the website settings, and bad input is refused here firs
     await dropSchema(schema);
   }
 });
+
+test("a missing website connection is explained, not hidden behind a generic error", async () => {
+  const schema = await createSchema();
+  const app = await createApp({
+    databaseUrl: TEST_DATABASE_URL,
+    schema,
+    cloudinary: null,
+    auth: null,
+    leadsWebhookSecret: null,
+  });
+  try {
+    const r = await app.inject({
+      method: "GET",
+      url: "/api/admin/website/careers",
+      headers: { host: "127.0.0.1" },
+    });
+    assert.equal(r.statusCode, 503);
+    assert.match(r.json().error, /not connected yet/);
+  } finally {
+    await app.close();
+    await dropSchema(schema);
+  }
+});
